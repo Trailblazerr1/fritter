@@ -75,8 +75,8 @@ class TweetCard extends StatelessWidget {
               maxLines: 1,
               style: Theme.of(context).textTheme.subtitle1!.copyWith(
                   color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700
               ),
             ),
           ),
@@ -89,7 +89,7 @@ class TweetCard extends StatelessWidget {
                 maxLines: 2,
                 style: Theme.of(context).textTheme.bodyText2!.copyWith(
                     color: Colors.white,
-                    fontSize: 12
+                    fontSize: 17
                 ),
               ),
             ),
@@ -194,9 +194,9 @@ class TweetCard extends StatelessWidget {
     if (imageSize == 'thumb') {
       imageKey = '_small';
     } else if (imageSize == 'medium') {
-      imageKey = '_large';
+      imageKey = '_small';
     } else if (imageSize == 'large') {
-      imageKey = '_x_large';
+      imageKey = '_small';
     }
 
     switch (card['name']) {

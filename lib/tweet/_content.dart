@@ -32,7 +32,7 @@ class TweetHashtag extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: '#${hashtag.text}',
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
@@ -50,7 +50,7 @@ class TweetUserMention extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: '@${mention.screenName}',
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
@@ -68,7 +68,7 @@ class TweetUrl extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: url.displayUrl,
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
