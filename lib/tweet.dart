@@ -448,7 +448,7 @@ class TweetTile extends StatelessWidget {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(id: tweet.user!.idStr, username: tweet.user!.screenName!)));
                   },
                   title: Text(tweet.user!.name!,
-                      style: TextStyle(fontWeight: FontWeight.w500)),
+                      style: TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text('@${tweet.user!.screenName!}'),
                   leading: CircleAvatar(
                     radius: 24,
