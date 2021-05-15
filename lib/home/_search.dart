@@ -116,7 +116,7 @@ class TweetSearchResultList<T> extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Oops! Something went wrong 🥲', style: TextStyle(
-                fontSize: 18
+                fontSize: 34
             )),
             Container(
               margin: EdgeInsets.symmetric(vertical: 8),
