@@ -9,8 +9,7 @@ on:
 jobs:
   create_release:
     runs-on: ubuntu-latest
-    environment: 
-      name: Env1
+    environment: test_env
     steps:
       - name: Clone the repository
         uses: actions/checkout@v2
