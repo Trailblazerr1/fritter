@@ -363,7 +363,7 @@ class TweetTile extends StatelessWidget {
       } else {
         quotedTweetTile = Container(
           width: double.infinity,
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 5),
           child: Text('This tweet is unavailable', style: TextStyle(
               color: Theme.of(context).hintColor
           )),
@@ -373,9 +373,9 @@ class TweetTile extends StatelessWidget {
       quotedTweet = Container(
         decoration: BoxDecoration(
             border: Border.all(color: Theme.of(context).primaryColor),
-            borderRadius: BorderRadius.circular(8)
+            borderRadius: BorderRadius.circular(4)
         ),
-        margin: EdgeInsets.all(8),
+        margin: EdgeInsets.all(4),
         child: Container(
           child: quotedTweetTile,
         ),
@@ -388,7 +388,7 @@ class TweetTile extends StatelessWidget {
     if (replyTo != null) {
       replyToTile = Container(
         alignment: Alignment.centerLeft,
-        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 5),
         child: RichText(
           text: TextSpan(
               children: [
@@ -448,12 +448,7 @@ class TweetTile extends StatelessWidget {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(id: tweet.user!.idStr, username: tweet.user!.screenName!)));
                   },
                   title: Text(tweet.user!.name!,
-                      style: TextStyle(fontWeight: FontWeight.w900)),
-                  subtitle: Text('@${tweet.user!.screenName!}'),
-                  leading: CircleAvatar(
-                    radius: 20,
-                    backgroundImage: ExtendedNetworkImageProvider(tweet.user!.profileImageUrlHttps!.replaceAll('normal', '200x200'), cache: true),
-                  ),
+                      style: TextStyle(fontWeight: FontWeight.w300)),
                   trailing: Text(timeago.format(tweet.createdAt!),
                       style: Theme.of(context).textTheme.caption),
                 ),
@@ -481,8 +476,6 @@ class TweetTile extends StatelessWidget {
                             }),
                           if (tweet.retweetCount != null)
                             _createFooterTextButton(Icons.repeat, numberFormat.format(tweet.retweetCount)),
-                          if (tweet.quoteCount != null)
-                            _createFooterTextButton(Icons.message, numberFormat.format(tweet.quoteCount)),
                           if (tweet.favoriteCount != null)
                             _createFooterTextButton(Icons.favorite, numberFormat.format(tweet.favoriteCount)),
                           FutureBuilder<bool>(

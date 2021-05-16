@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       title: 'Fritter',
-      theme: FlexColorScheme.light(colors: fritterColorScheme.light, visualDensity: VisualDensity.adaptivePlatformDensity).toTheme,
+      theme: FlexColorScheme.light(colors: fritterColorScheme.light, visualDensity: minimumDensity).toTheme,
       darkTheme: FlexColorScheme.dark(colors: fritterColorScheme.dark, darkIsTrueBlack: _trueBlack).toTheme,
       themeMode: themeMode,
       home: DefaultPage(),
