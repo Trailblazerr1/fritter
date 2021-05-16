@@ -122,12 +122,12 @@ class _TweetMediaState extends State<TweetMedia> {
 
   @override
   Widget build(BuildContext context) {
-    var largestAspectRatio = widget.media
+    var largestAspectRatio = widget.media/2
       .map((e) => ((e.sizes!.large!.w) ?? 1) / ((e.sizes!.large!.h) ?? 1))
       .reduce(math.max);
 
     return Container(
-      margin: EdgeInsets.only(top: 8, left: 16, right: 16),
+      margin: EdgeInsets.only(top: 4, left: 8, right: 8),
       child: AspectRatio(
         aspectRatio: largestAspectRatio,
         child: PageView.builder(
@@ -156,7 +156,7 @@ class TweetPhoto extends StatelessWidget {
     var prefs = PrefService.of(context, listen: false);
     var size = prefs.get(OPTION_MEDIA_SIZE);
     if (size == 'disabled') {
-      size = 'medium';
+      size = 'small';
     }
 
     return ExtendedImage.network('$uri:$size',
@@ -363,7 +363,7 @@ class TweetTile extends StatelessWidget {
       } else {
         quotedTweetTile = Container(
           width: double.infinity,
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
           child: Text('This tweet is unavailable', style: TextStyle(
               color: Theme.of(context).hintColor
           )),
@@ -388,13 +388,13 @@ class TweetTile extends StatelessWidget {
     if (replyTo != null) {
       replyToTile = Container(
         alignment: Alignment.centerLeft,
-        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
         child: RichText(
           text: TextSpan(
               children: [
                 WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
-                  child: Icon(Icons.reply, size: 14, color: Theme.of(context).primaryColorDark),
+                  child: Icon(Icons.reply, size: 20, color: Theme.of(context).primaryColorDark),
                 ),
                 WidgetSpan(
                   child: SizedBox(width: 4)
@@ -419,7 +419,7 @@ class TweetTile extends StatelessWidget {
       content = Container(
         // Fill the width so both RTL and LTR text are displayed correctly
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         child: AutoDirection(
           text: tweetText,
           child: TweetContent(tweet: tweet),
@@ -448,7 +448,7 @@ class TweetTile extends StatelessWidget {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(id: tweet.user!.idStr, username: tweet.user!.screenName!)));
                   },
                   title: Text(tweet.user!.name!,
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                      style: TextStyle(fontWeight: FontWeight.w900)),
                   subtitle: Text('@${tweet.user!.screenName!}'),
                   leading: CircleAvatar(
                     radius: 24,
