@@ -146,7 +146,7 @@ class TweetContent extends StatelessWidget {
         return;
       }
 
-      parts.add(TextSpan(text: htmlUnescape.convert(string), style: Theme.of(context).textTheme.bodyText2));
+      parts.add(TextSpan(text: htmlUnescape.convert(string), style: Theme.of(context).textTheme.headline4));
     };
 
     entities.forEach((part) {

@@ -87,7 +87,7 @@ class TweetCard extends StatelessWidget {
                 card['binding_values']['description']['string_value'],
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
-                style: Theme.of(context).textTheme.bodyText2!.copyWith(
+                style: Theme.of(context).textTheme.headline4!.copyWith(
                     color: Colors.white,
                     fontSize: 17
                 ),
