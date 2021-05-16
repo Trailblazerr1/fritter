@@ -116,18 +116,18 @@ class TweetMedia extends StatefulWidget {
   @override
   _TweetMediaState createState() => _TweetMediaState();
 }
-
+//carousel for media
 class _TweetMediaState extends State<TweetMedia> {
   final PageController _controller = PageController();
 
   @override
   Widget build(BuildContext context) {
     var largestAspectRatio = widget.media
-      .map((e) => ((e.sizes!.large!.w) ?? 1) / ((e.sizes!.large!.h) ?? 1))
+      .map((e) => ((e.sizes!.large!.w) ?? 0.5) / ((e.sizes!.large!.h) ?? 0.5))
       .reduce(math.max);
 
     return Container(
-      margin: EdgeInsets.only(top: 4, left: 8, right: 8),
+      margin: EdgeInsets.only(top: 2, left: 4, right: 4),
       child: AspectRatio(
         aspectRatio: largestAspectRatio,
         child: PageView.builder(
@@ -316,7 +316,7 @@ class TweetTile extends StatelessWidget {
           color: Theme.of(context).secondaryHeaderColor,
           child: Center(
             child: Padding(
-                padding: EdgeInsets.all(8),
+                padding: EdgeInsets.all(4),
                 child: RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
@@ -419,7 +419,7 @@ class TweetTile extends StatelessWidget {
       content = Container(
         // Fill the width so both RTL and LTR text are displayed correctly
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: AutoDirection(
           text: tweetText,
           child: TweetContent(tweet: tweet),
