@@ -149,7 +149,7 @@ class TweetPhoto extends StatelessWidget {
   final String uri;
   final BoxFit fit;
   
-  const TweetPhoto({Key? key, required this.uri, this.fit = BoxFit.fitWidth}) : super(key: key);
+  const TweetPhoto({Key? key, required this.uri, this.fit = BoxFit.scaleDown}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -161,8 +161,8 @@ class TweetPhoto extends StatelessWidget {
 
     return ExtendedImage.network('$uri:$size',
         cache: true,
-        width: 500,
-        height: 500,
+        width: 200,
+        height: 200,
         fit: BoxFit.scaleDown,
         scale: 0.5
     );
