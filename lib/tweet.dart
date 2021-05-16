@@ -163,7 +163,7 @@ class TweetPhoto extends StatelessWidget {
         cache: true,
         width: 2000,
         height: 2000,
-        fit: fit,
+        fit: BoxFit.scaleDown,
         scale: 0.5
     );
   }
@@ -275,7 +275,7 @@ class TweetTile extends StatelessWidget {
   _createFooterIconButton(IconData icon, [Color? color, Function()? onPressed]) {
     return InkWell(
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16),
+        margin: EdgeInsets.symmetric(horizontal: 4),
         child: Icon(icon, size: 14, color: color),
       ),
       onTap: onPressed,
