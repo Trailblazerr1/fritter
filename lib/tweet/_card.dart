@@ -27,7 +27,7 @@ class TweetCard extends StatelessWidget {
 
     return GestureDetector(
       child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 12),
+          margin: EdgeInsets.symmetric(horizontal: 6),
           child: Card(
             clipBehavior: Clip.antiAlias,
             color: Colors.blue,
@@ -63,7 +63,7 @@ class TweetCard extends StatelessWidget {
 
   _createListTile(BuildContext context, Map<String, dynamic> card) {
     return Container(
-      padding: EdgeInsets.only(left: 6, right: 6, bottom: 2),
+      padding: EdgeInsets.only(left: 3, right: 3, bottom: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -73,7 +73,7 @@ class TweetCard extends StatelessWidget {
               card['binding_values']['title']['string_value'],
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
-              style: Theme.of(context).textTheme.subtitle1!.copyWith(
+              style: Theme.of(context).textTheme.headline6!.copyWith(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w900
@@ -238,7 +238,7 @@ class TweetCard extends StatelessWidget {
         return _createVoteCard(card, 2);
       case 'poll3choice_text_only':
         return _createVoteCard(card, 3);
-      case 'poll4choice_text_only':
+      case 'pollCircleAvatar4choice_text_only':
         return _createVoteCard(card, 4);
       default:
         log('Unknown card type ${card['name']} was encountered');

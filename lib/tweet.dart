@@ -451,7 +451,7 @@ class TweetTile extends StatelessWidget {
                       style: TextStyle(fontWeight: FontWeight.w900)),
                   subtitle: Text('@${tweet.user!.screenName!}'),
                   leading: CircleAvatar(
-                    radius: 24,
+                    radius: 20,
                     backgroundImage: ExtendedNetworkImageProvider(tweet.user!.profileImageUrlHttps!.replaceAll('normal', '200x200'), cache: true),
                   ),
                   trailing: Text(timeago.format(tweet.createdAt!),
@@ -508,7 +508,7 @@ class TweetTile extends StatelessWidget {
                               child: Container(
                                 margin: EdgeInsets.symmetric(vertical: 8),
                                 child: Text(text, style: TextStyle(
-                                    fontSize: 16
+                                    fontSize: 20
                                 )),
                               ),
                               onPressed: () => Share.share(shareContent),
