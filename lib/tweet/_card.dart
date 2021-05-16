@@ -63,12 +63,12 @@ class TweetCard extends StatelessWidget {
 
   _createListTile(BuildContext context, Map<String, dynamic> card) {
     return Container(
-      padding: EdgeInsets.only(left: 12, right: 12, bottom: 4),
+      padding: EdgeInsets.only(left: 6, right: 6, bottom: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: EdgeInsets.only(top: 4),
+            margin: EdgeInsets.only(top: 2),
             child: Text(
               card['binding_values']['title']['string_value'],
               overflow: TextOverflow.ellipsis,
@@ -76,7 +76,7 @@ class TweetCard extends StatelessWidget {
               style: Theme.of(context).textTheme.subtitle1!.copyWith(
                   color: Colors.white,
                   fontSize: 18,
-                  fontWeight: FontWeight.w700
+                  fontWeight: FontWeight.w900
               ),
             ),
           ),
