@@ -74,7 +74,7 @@ class TweetCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: Theme.of(context).textTheme.headline6!.copyWith(
-                  color: Colors.blue,
+                  color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w900
               ),
@@ -88,7 +88,7 @@ class TweetCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
                 style: Theme.of(context).textTheme.headline6!.copyWith(
-                    color: Colors.red,
+                    color: Colors.white,
                     fontSize: 17
                 ),
               ),
@@ -99,12 +99,12 @@ class TweetCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.link, size: 12, color: Colors.green),
+                  Icon(Icons.link, size: 12, color: Colors.white),
                   SizedBox(width: 4),
                   Text(
                       card['binding_values']['vanity_url']['string_value'],
                       style: Theme.of(context).textTheme.caption!.copyWith(
-                        color: Colors.teal,
+                        color: Colors.white,
                       )
                   ),
                 ],

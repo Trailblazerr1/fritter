@@ -73,7 +73,7 @@ class _TweetMediaItemState extends State<TweetMediaItem> {
     } else {
       media = GestureDetector(
         child: Container(
-          color: Colors.black26,
+          color: Colors.black,
           child: Center(
             child: Text('Tap to show media'),
           ),
@@ -96,7 +96,7 @@ class _TweetMediaItemState extends State<TweetMediaItem> {
           right: 0,
           child: Container(
             alignment: Alignment.topRight,
-            color: Colors.black38,
+            color: Colors.black,
             margin: EdgeInsets.all(8),
             padding: EdgeInsets.all(8),
             child: Text('${widget.index} / ${widget.total}'),
@@ -207,7 +207,7 @@ class _TweetVideoState extends State<TweetVideo> {
           child: _controller.value.isPlaying
               ? SizedBox.shrink()
               : Container(
-            color: Colors.black26,
+            color: Colors.black,
             child: Center(
               child: Icon(
                 Icons.play_arrow,

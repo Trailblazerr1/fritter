@@ -149,15 +149,15 @@ class _MyAppState extends State<MyApp> {
       description: 'Blue theme based on the Twitter color scheme',
       light: FlexSchemeColor(
         primary: Colors.blue,
-        primaryVariant: Color(0xFF320019),
+        primaryVariant: Color(0xBB320019),
         secondary: Colors.blue[500]!,
-        secondaryVariant: Color(0xFF002411),
+        secondaryVariant: Color(0xBB002411),
       ),
       dark: FlexSchemeColor(
         primary: Colors.blue,
-        primaryVariant: Color(0xFF775C69),
+        primaryVariant: Color(0xAA775C69),
         secondary: Colors.blue[500]!,
-        secondaryVariant: Color(0xFF5C7267),
+        secondaryVariant: Color(0xAA5C7267),
       ),
     );
 
@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       title: 'Fritter',
-      theme: FlexColorScheme.light(colors: fritterColorScheme.light).toTheme,
+      theme: FlexColorScheme.light(colors: fritterColorScheme.light, visualDensity: VisualDensity.adaptivePlatformDensity).toTheme,
       darkTheme: FlexColorScheme.dark(colors: fritterColorScheme.dark, darkIsTrueBlack: _trueBlack).toTheme,
       themeMode: themeMode,
       home: DefaultPage(),
