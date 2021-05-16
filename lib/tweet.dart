@@ -161,9 +161,10 @@ class TweetPhoto extends StatelessWidget {
 
     return ExtendedImage.network('$uri:$size',
         cache: true,
-        width: 5000,
-        height: 5000,
-        fit: fit
+        width: 2000,
+        height: 2000,
+        fit: fit,
+        scale: 0.5
     );
   }
 }
