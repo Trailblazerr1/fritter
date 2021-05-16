@@ -154,9 +154,9 @@ class _MyAppState extends State<MyApp> {
         secondaryVariant: Color(0xFF002411),
       ),
       dark: FlexSchemeColor(
-        primary: Colors.blue,
+        primary: Colors.white,
         primaryVariant: Color(0xFF775C69),
-        secondary: Colors.blue[500]!,
+        secondary: Colors.white[500]!,
         secondaryVariant: Color(0xFF5C7267),
       ),
     );
