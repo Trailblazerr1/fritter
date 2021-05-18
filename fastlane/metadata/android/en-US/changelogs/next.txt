@@ -1,4 +1,0 @@
-* Added support for selecting the default tab when the app opens
-* Added support for selecting the media size
-* Now showing who a tweet is in reply to
-* Fixed not being able to select non-Latin hashtags
