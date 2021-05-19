@@ -152,7 +152,7 @@ class _MyAppState extends State<MyApp> {
       name: 'Fritter blue',
       description: 'Blue theme based on the Twitter color scheme',
       light: FlexSchemeColor(
-        primary: Colors.blue,
+        primary: Color(0xFF64B5F6),
         primaryVariant: Color(0xFF320019),
         secondary: Colors.blue[500]!,
         secondaryVariant: Color(0xFF002411),
