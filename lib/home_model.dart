@@ -4,6 +4,8 @@ import 'dart:developer';
 import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter/material.dart';
 import 'package:fritter/client.dart';
+import 'package:fritter/constants.dart';
+import 'package:pref/pref.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -57,8 +59,8 @@ class HomeModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<Trends>> loadTrends() async {
-    return Twitter.getTrends();
+  Future<List<Trends>> loadTrends(int location) async {
+    return Twitter.getTrends(location);
   }
 
   Future<List<SubscriptionGroup>> listSubscriptionGroups() async {
@@ -177,5 +179,35 @@ class HomeModel extends ChangeNotifier {
     }
 
     await batch.commit();
+  }
+
+  Future toggleSubscriptionGroupIncludeReplies(String id, bool value) async {
+    var database = await Repository.writable();
+
+    await database.rawUpdate('UPDATE $TABLE_SUBSCRIPTION_GROUP SET include_replies = ? WHERE id = ?', [value, id]);
+
+    notifyListeners();
+  }
+
+  Future toggleSubscriptionGroupIncludeRetweets(String id, bool value) async {
+    var database = await Repository.writable();
+
+    await database.rawUpdate('UPDATE $TABLE_SUBSCRIPTION_GROUP SET include_retweets = ? WHERE id = ?', [value, id]);
+
+    notifyListeners();
+  }
+
+  Future<SubscriptionGroupSettings> loadSubscriptionGroupSettings(String id) async {
+    var database = await Repository.readOnly();
+
+    return (await database.rawQuery('SELECT include_replies, include_retweets FROM $TABLE_SUBSCRIPTION_GROUP WHERE id = ?', [id]))
+        .map((e) => SubscriptionGroupSettings(includeReplies: e['include_replies'] == 1, includeRetweets: e['include_retweets'] == 1))
+        .first;
+  }
+
+  Future setTrendLocation(BasePrefService prefs, TrendLocation item) async {
+    prefs.set(OPTION_TRENDS_LOCATION, jsonEncode(item.toJson()));
+
+    notifyListeners();
   }
 }
