@@ -122,11 +122,11 @@ class _TweetMediaState extends State<TweetMedia> {
   @override
   Widget build(BuildContext context) {
     var largestAspectRatio = widget.media
-      .map((e) => ((e.sizes!.large!.w) ?? 1) / ((e.sizes!.large!.h) ?? 1))
+      .map((e) => ((e.sizes!.large!.w) ?? 0.5) / ((e.sizes!.large!.h) ?? 0.5))
       .reduce(math.max);
 
     return Container(
-      margin: EdgeInsets.only(top: 8, left: 16, right: 16),
+      margin: EdgeInsets.only(top: 0, left: 64, right: 64),
       child: AspectRatio(
         aspectRatio: largestAspectRatio,
         child: PageView.builder(
@@ -160,8 +160,8 @@ class TweetPhoto extends StatelessWidget {
 
     return ExtendedImage.network('$uri:$size',
         cache: true,
-        width: 5000,
-        height: 5000,
+        width: 2000,
+        height: 2000,
         fit: fit
     );
   }
