@@ -101,8 +101,8 @@ flutter:
   fonts:
     - family: Literata
       fonts:
-        - asset: assets/Literata-Bold.ttf
-        - asset: assets/Literata-BoldItalic.ttf
+        - asset: assets/Literata-Regular.ttf
+        - asset: assets/Literata-Italic.ttf
           style: normal
   
   # For details regarding fonts from package dependencies,
