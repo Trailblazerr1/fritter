@@ -222,7 +222,7 @@ class TweetCard extends StatelessWidget {
 
         return _createCard(card, Row(
           children: [
-            Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.cover, aspectRatio: 1)),
+            Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.cover, aspectRatio: 0.5)),
             Expanded(flex: 4, child: _createListTile(context, card))
           ],
         ));

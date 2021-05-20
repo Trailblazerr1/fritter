@@ -32,7 +32,7 @@ class TweetHashtag extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: '#${hashtag.text}',
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
@@ -50,7 +50,7 @@ class TweetUserMention extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: '@${mention.screenName}',
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
@@ -68,7 +68,7 @@ class TweetUrl extends TweetEntity {
   InlineSpan getContent() {
     return TextSpan(
         text: url.displayUrl,
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.black),
         recognizer: TapGestureRecognizer()..onTap = () {
           onTap();
         }
@@ -146,7 +146,7 @@ class TweetContent extends StatelessWidget {
         return;
       }
 
-      parts.add(TextSpan(text: htmlUnescape.convert(string), style: Theme.of(context).textTheme.bodyText2));
+      parts.add(TextSpan(text: htmlUnescape.convert(string), style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16.0)));
     };
 
     entities.forEach((part) {
