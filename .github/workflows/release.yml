@@ -9,6 +9,7 @@ on:
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    environment: test_env
     steps:
       - name: Clone the repository
         uses: actions/checkout@v2
@@ -20,7 +21,7 @@ jobs:
         with:
           java-version: '14.x'
       
-      - name:
+      - name: Sign key
         run: echo $SIGNING_KEY | base64 -d > android/app/key.jks
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -40,6 +41,7 @@ jobs:
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PATH: key.jks
 
       - name: Create Release
         id: create_release

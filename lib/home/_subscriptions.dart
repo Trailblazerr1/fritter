@@ -323,6 +323,7 @@ class _SubscriptionsContentState extends State<SubscriptionsContent> {
                                             SizedBox(height: 4),
                                             Text('New', style: TextStyle(
                                               fontSize: 11,
+                                              fontWeight: FontWeight.bold,
                                             ))
                                           ],
                                         ),

@@ -450,7 +450,7 @@ class TweetTile extends StatelessWidget {
                       style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
                   subtitle: Text('@${tweet.user!.screenName!}'),
                   trailing: Text(timeago.format(tweet.createdAt!),
-                      style: Theme.of(context).textTheme.caption),
+                      style: Theme.of(context).textTheme.subtitle2),
                 ),
                 replyToTile,
                 content,

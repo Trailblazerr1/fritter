@@ -68,7 +68,7 @@ class TweetCard extends StatelessWidget {
               style: Theme.of(context).textTheme.subtitle1!.copyWith(
                   color: Colors.white,
                   fontSize: 13,
-                  fontWeight: FontWeight.w500
+                  fontWeight: FontWeight.w600
               ),
             ),
           ),
