@@ -27,7 +27,7 @@ class TweetCard extends StatelessWidget {
 
     return GestureDetector(
       child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 12),
+          margin: EdgeInsets.symmetric(horizontal: 24),
           child: Card(
             clipBehavior: Clip.antiAlias,
             color: Colors.blue,
@@ -63,7 +63,7 @@ class TweetCard extends StatelessWidget {
 
   _createListTile(BuildContext context, Map<String, dynamic> card) {
     return Container(
-      padding: EdgeInsets.only(left: 12, right: 12, bottom: 4),
+      padding: EdgeInsets.only(left: 12, right: 12, bottom: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

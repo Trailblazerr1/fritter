@@ -126,7 +126,7 @@ class _TweetMediaState extends State<TweetMedia> {
       .reduce(math.max);
 
     return Container(
-      margin: EdgeInsets.only(top: 0, left: 64, right: 64),
+      margin: EdgeInsets.only(top: 0, left: 128, right: 128),
       child: AspectRatio(
         aspectRatio: largestAspectRatio,
         child: PageView.builder(
@@ -285,7 +285,7 @@ class TweetTile extends StatelessWidget {
       icon: Icon(icon, size: 14, color: color),
       onPressed: onPressed,
       label: Text(label, style: TextStyle(
-        color: color,
+        color: Colors.black,
         fontSize: 12.5
       )),
     );
@@ -449,10 +449,6 @@ class TweetTile extends StatelessWidget {
                   title: Text(tweet.user!.name!,
                       style: TextStyle(fontWeight: FontWeight.w500)),
                   subtitle: Text('@${tweet.user!.screenName!}'),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundImage: ExtendedNetworkImageProvider(tweet.user!.profileImageUrlHttps!.replaceAll('normal', '200x200'), cache: true),
-                  ),
                   trailing: Text(timeago.format(tweet.createdAt!),
                       style: Theme.of(context).textTheme.caption),
                 ),
