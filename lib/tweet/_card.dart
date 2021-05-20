@@ -45,18 +45,10 @@ class TweetCard extends StatelessWidget {
 
     Widget child;
 
-    if (size == 'disabled') {
-      child = Container();
-    } else {
-      child = ExtendedImage.network(
-        image['url'],
-        cache: true,
-        fit: fit,
-      );
-    }
+    child = Container();
 
     return AspectRatio(
-      aspectRatio: aspectRatio ?? image['width'] / image['height'],
+      aspectRatio: aspectRatio ?? image['width'] / (0.05*image['height']),
       child: child,
     );
   }
