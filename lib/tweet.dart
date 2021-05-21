@@ -40,7 +40,7 @@ class TweetTile extends StatelessWidget {
       icon: Icon(icon, size: 14, color: color),
       onPressed: onPressed,
       label: Text(label, style: TextStyle(
-        color: color,
+        color: Colors.black,
         fontSize: 12.5
       )),
     );
@@ -203,6 +203,7 @@ class TweetTile extends StatelessWidget {
                   title: Row(
                     children: [
                       Text(tweet.user!.name!, style: TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.w500)
                       ),
                       if (tweet.user!.verified ?? false)
@@ -212,10 +213,6 @@ class TweetTile extends StatelessWidget {
                     ],
                   ),
                   subtitle: Text('@${tweet.user!.screenName!}'),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundImage: ExtendedNetworkImageProvider(tweet.user!.profileImageUrlHttps!.replaceAll('normal', '200x200'), cache: true),
-                  ),
                   trailing: Text(timeago.format(tweet.createdAt!),
                       style: Theme.of(context).textTheme.caption),
                 ),

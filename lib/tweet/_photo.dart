@@ -13,8 +13,8 @@ class TweetPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExtendedImage.network('$uri:$size',
       cache: true,
-      width: 5000,
-      height: 5000,
+      width: 1000,
+      height: 1000,
       fit: fit,
       mode: ExtendedImageMode.gesture,
       initGestureConfigHandler: (state) {

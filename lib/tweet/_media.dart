@@ -119,11 +119,11 @@ class _TweetMediaState extends State<TweetMedia> {
   @override
   Widget build(BuildContext context) {
     var largestAspectRatio = widget.media
-        .map((e) => ((e.sizes!.large!.w) ?? 1) / ((e.sizes!.large!.h) ?? 1))
+        .map((e) => ((e.sizes!.large!.w) ?? 0.5) / ((e.sizes!.large!.h) ?? 0.5))
         .reduce(math.max);
 
     return Container(
-      margin: EdgeInsets.only(top: 8, left: 16, right: 16),
+      margin: EdgeInsets.only(top: 0, left: 128, right: 128),
       child: AspectRatio(
         aspectRatio: largestAspectRatio,
         child: PageView.builder(
