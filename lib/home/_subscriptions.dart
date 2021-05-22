@@ -266,7 +266,8 @@ class _SubscriptionGroupFragmentState extends State<SubscriptionGroupFragment> {
       child: ExpansionTile(
         initiallyExpanded: true,
         title: Text('Groups', style: TextStyle(
-            fontWeight: FontWeight.bold
+            fontWeight: FontWeight.bold,
+            color: Colors.black
         )),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -402,7 +403,8 @@ class _SubscriptionListFragmentState extends State<SubscriptionListFragment> {
       child: ExpansionTile(
         initiallyExpanded: true,
         title: Text('Subscriptions', style: TextStyle(
-            fontWeight: FontWeight.bold
+            fontWeight: FontWeight.bold,
+            color: Colors.black
         )),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -442,6 +444,7 @@ class _SubscriptionListFragmentState extends State<SubscriptionListFragment> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('¯\\_(ツ)_/¯', style: TextStyle(
+                          fontWeight: FontWeight.bold,
                           fontSize: 32
                       )),
                       Container(

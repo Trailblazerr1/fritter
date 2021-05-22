@@ -41,8 +41,8 @@ class UserTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(64),
         child: image,
       ),
-      title: Text(name),
-      subtitle: Text('@$screenName'),
+      title: Text(name,style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black)),
+      subtitle: Text('@$screenName',style: TextStyle(color: Colors.black)),
       trailing: Container(
         width: 36,
         child: FollowButton(id: id, name: name, screenName: screenName, imageUri: imageUri),

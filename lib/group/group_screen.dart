@@ -4,7 +4,6 @@ import 'package:fritter/database/repository.dart';
 import 'package:fritter/database/entities.dart';
 import 'package:fritter/home_model.dart';
 import 'package:fritter/tweet.dart';
-import 'package:fritter/ui/futures.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:provider/provider.dart';
 
@@ -227,15 +226,10 @@ class _SubscriptionGroupScreenState extends State<SubscriptionGroupScreen> {
         var users = group.subscriptions.map((e) => e.screenName).toList();
 
         return Consumer<HomeModel>(builder: (context, model, child) {
-          return FutureBuilderWrapper<SubscriptionGroupSettings>(
+          return FutureBuilder<SubscriptionGroupSettings>(
             future: model.loadSubscriptionGroupSettings(group.id),
-            onError: (error, stackTrace) {
-              return Scaffold(
-                appBar: AppBar(),
-                body: Center(child: Text('$error')),
-              );
-            },
-            onReady: (settings) {
+            builder: (context, snapshot) {
+              var settings = snapshot.data;
               if (settings == null) {
                 return Center(child: CircularProgressIndicator());
               }
