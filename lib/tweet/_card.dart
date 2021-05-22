@@ -27,7 +27,7 @@ class TweetCard extends StatelessWidget {
 
     return GestureDetector(
       child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 24),
+          margin: EdgeInsets.symmetric(horizontal: 12),
           child: Card(
             clipBehavior: Clip.antiAlias,
             color: Colors.blue,

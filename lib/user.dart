@@ -41,7 +41,7 @@ class UserTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(64),
         child: image,
       ),
-      title: Text(name,style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black)),
+      title: Text(name,style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16.0)),
       subtitle: Text('@$screenName',style: TextStyle(color: Colors.black)),
       trailing: Container(
         width: 36,
