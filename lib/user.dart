@@ -48,7 +48,7 @@ class UserTile extends StatelessWidget {
         child: FollowButton(id: id, name: name, screenName: screenName, imageUri: imageUri),
       ),
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(id: id, username: screenName)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: screenName)));
       },
     );
   }
@@ -78,9 +78,13 @@ class _FollowButtonState extends State<FollowButton> {
   }
 
   Future fetchFollowed() {
-    return isFollowed(int.parse(widget.id)).then((value) => setState(() {
-      this._followed = value;
-    }));
+    return isFollowed(int.parse(widget.id)).then((value) {
+      if (this.mounted) {
+        setState(() {
+          this._followed = value;
+        });
+      }
+    });
   }
 
   Future<bool> isFollowed(int id) async {
