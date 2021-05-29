@@ -21,7 +21,7 @@ class Repository {
     return openDatabase(DATABASE_NAME);
   }
 
-  void migrate() async {
+  Future<bool> migrate() async {
     MigrationPlan myMigrationPlan = MigrationPlan({
       2: [
         SqlMigration('CREATE TABLE IF NOT EXISTS following (id INTEGER PRIMARY KEY, screen_name VARCHAR, name VARCHAR, profile_image_url_https VARCHAR, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'),
@@ -104,16 +104,42 @@ class Repository {
         // Add columns for the subscription group settings
         SqlMigration('ALTER TABLE $TABLE_SUBSCRIPTION_GROUP ADD COLUMN include_replies BOOLEAN DEFAULT true'),
         SqlMigration('ALTER TABLE $TABLE_SUBSCRIPTION_GROUP ADD COLUMN include_retweets BOOLEAN DEFAULT true')
+      ],
+      12: [
+        // Insert a dummy record for the "All" subscription group
+        Migration(Operation((db) async {
+          await db.insert(TABLE_SUBSCRIPTION_GROUP, {
+            'id': '-1',
+            'name': 'All',
+            'icon': 'rss_feed'
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }), reverse: Operation((db) async {
+          await db.delete(TABLE_SUBSCRIPTION_GROUP, where: 'id = ?', whereArgs: ['-1']);
+        })),
+      ],
+      13: [
+        // Duplicate migration 12, as some people had deleted the "All" group when it displayed twice in the groups list
+        Migration(Operation((db) async {
+          await db.insert(TABLE_SUBSCRIPTION_GROUP, {
+            'id': '-1',
+            'name': 'All',
+            'icon': 'rss_feed'
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }), reverse: Operation((db) async {
+          await db.delete(TABLE_SUBSCRIPTION_GROUP, where: 'id = ?', whereArgs: ['-1']);
+        })),
       ]
     });
 
     await openDatabase(DATABASE_NAME,
-        version: 11,
+        version: 13,
         onUpgrade: myMigrationPlan,
         onCreate: myMigrationPlan,
         onDowngrade: myMigrationPlan
     );
 
     log('Finished migrating database');
+
+    return true;
   }
 }
