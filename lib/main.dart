@@ -78,9 +78,8 @@ Future<void> main() async {
 
   // TODO: Only enable the dialog report mode if the setting is enabled
 
-  CatcherOptions catcherOptions = CatcherOptions(DialogReportMode(), [
+  CatcherOptions catcherOptions = CatcherOptions(SilentReportMode(), [
     ConsoleHandler(),
-    EmailManualHandler(['support@fritter.cc'])
   ], localizationOptions: [
     LocalizationOptions('en',
       dialogReportModeDescription: 'A crash report has been generated, and can be emailed to the Fritter developers to help fix the problem.\n\nThe report contains device-specific information, so please feel free to remove any information you may wish to not disclose!\n\nView our privacy policy at fritter.cc/privacy to see how your report is handled.',
@@ -88,7 +87,9 @@ Future<void> main() async {
       dialogReportModeAccept: 'Send',
       dialogReportModeCancel: "Don't send"
     )
-  ]);
+  ], explicitExceptionHandlersMap: {
+    'ManuallyReported': EmailManualHandler(['support@fritter.cc'])
+  });
 
   Catcher(
     debugConfig: catcherOptions,
@@ -224,27 +225,18 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-
 class DefaultPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _DefaultPageState();
 }
 
 class _DefaultPageState extends State<DefaultPage> {
-  String? _page;
-
-  late String _username;
-  late String _statusId;
-
   late StreamSubscription _sub;
 
   void handleInitialLink(Uri link) {
     // Assume it's a username if there's only one segment
     if (link.pathSegments.length == 1) {
-      setState(() {
-        _page = 'profile';
-        _username = link.pathSegments.first;
-      });
+      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: link.pathSegments.first)));
       return;
     }
 
@@ -254,11 +246,7 @@ class _DefaultPageState extends State<DefaultPage> {
         var username = link.pathSegments[0];
         var statusId = link.pathSegments[2];
 
-        setState(() {
-          _page = 'status';
-          _username = username;
-          _statusId = statusId;
-        });
+        Navigator.push(context, MaterialPageRoute(builder: (context) => StatusScreen(username: username, id: statusId)));
         return;
       }
     }
@@ -291,24 +279,13 @@ class _DefaultPageState extends State<DefaultPage> {
         stackTrace: stackTrace,
         prefix: 'Unable to run the database migrations',
       ),
-      onReady: (data) {
-        switch (_page) {
-          case 'profile':
-            return ProfileScreen(username: _username);
-          case 'status':
-            return StatusScreen(username: _username, id: _statusId);
-          default:
-            return HomeScreen();
-        }
-      },
+      onReady: (data) => HomeScreen(),
     );
   }
 
   @override
   void dispose() {
     super.dispose();
-    if (_sub != null) {
-      _sub.cancel();
-    }
+    _sub.cancel();
   }
 }

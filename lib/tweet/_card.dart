@@ -107,16 +107,26 @@ class TweetCard extends StatelessWidget {
     );
   }
 
-  _createVoteBar(Map<String, dynamic> card, double total, int choiceIndex) {
+  _createVoteBar(BuildContext context, Map<String, dynamic> card, double total, int choiceIndex) {
     var choiceCount = double.parse(card['binding_values']['choice${choiceIndex}_count']['string_value']);
     var choicePercent = (100 / total) * choiceCount;
+
+    var theme = Theme.of(context);
+    var textColor = theme.brightness == Brightness.light
+        ? Colors.black
+        : Colors.white;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 4),
       child: Stack(alignment: Alignment.center, children: [
         SizedBox(
           height: 24,
-          child: LinearProgressIndicator(value: choicePercent / 100),
+          child: LinearProgressIndicator(
+            value: choicePercent / 100,
+            color: theme.brightness == Brightness.light
+              ? Colors.blue.withOpacity(0.3)
+              : Colors.blue.withOpacity(0.7)
+          ),
         ),
         Container(
             alignment: Alignment.centerLeft,
@@ -125,9 +135,12 @@ class TweetCard extends StatelessWidget {
               text: TextSpan(
                   children: [
                     TextSpan(text: '${choicePercent.toStringAsFixed(1)}% ', style: TextStyle(
-                        fontWeight: FontWeight.bold
+                      color: textColor,
+                      fontWeight: FontWeight.bold
                     )),
-                    TextSpan(text: card['binding_values']['choice${choiceIndex}_label']['string_value'])
+                    TextSpan(text: card['binding_values']['choice${choiceIndex}_label']['string_value'], style: TextStyle(
+                      color: textColor,
+                    ))
                   ]
               ),
             )
@@ -136,7 +149,7 @@ class TweetCard extends StatelessWidget {
     );
   }
 
-  _createVoteCard(Map<String, dynamic> card, int numberOfChoices) {
+  _createVoteCard(BuildContext context, Map<String, dynamic> card, int numberOfChoices) {
     var numberFormat = NumberFormat.decimalPattern();
 
     var total = List.generate(numberOfChoices, (index) => double.parse(card['binding_values']['choice${++index}_count']['string_value']))
@@ -155,7 +168,7 @@ class TweetCard extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
-            ...List.generate(numberOfChoices, (index) => _createVoteBar(card, total, ++index)),
+            ...List.generate(numberOfChoices, (index) => _createVoteBar(context, card, total, ++index)),
             Container(
               alignment: Alignment.centerRight,
               margin: EdgeInsets.only(top: 8),
@@ -227,11 +240,11 @@ class TweetCard extends StatelessWidget {
           ],
         ));
       case 'poll2choice_text_only':
-        return _createVoteCard(card, 2);
+        return _createVoteCard(context, card, 2);
       case 'poll3choice_text_only':
-        return _createVoteCard(card, 3);
+        return _createVoteCard(context, card, 3);
       case 'poll4choice_text_only':
-        return _createVoteCard(card, 4);
+        return _createVoteCard(context, card, 4);
       default:
         log('Unknown card type ${card['name']} was encountered');
         return Container();
