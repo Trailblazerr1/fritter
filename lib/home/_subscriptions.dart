@@ -214,7 +214,7 @@ class _SubscriptionGroupFragmentState extends State<SubscriptionGroupFragment> {
       child: InkWell(
         onTap: () {
           // Open page with the group's feed
-          Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionGroupScreen(id: id)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionGroupScreen(id: id, name: name)));
         },
         onLongPress: onLongPress,
         child: Column(
@@ -441,6 +441,7 @@ class _SubscriptionListFragmentState extends State<SubscriptionListFragment> {
                     name: user.name,
                     screenName: user.screenName,
                     imageUri: user.profileImageUrlHttps,
+                    verified: user.verified,
                   );
                 },
               );
