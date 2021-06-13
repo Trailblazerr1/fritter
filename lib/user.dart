@@ -49,14 +49,14 @@ class UserTile extends StatelessWidget {
       ),
       title: Row(
         children: [
-          Text(name,style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 16.0)),
+          Text(name),
           if (verified)
             SizedBox(width: 6),
           if (verified)
             Icon(Icons.verified, size: 14, color: Colors.blue)
         ],
       ),
-      subtitle: Text('@$screenName',,style: TextStyle(color: Colors.black)),
+      subtitle: Text('@$screenName'),
       trailing: Container(
         width: 36,
         child: FollowButton(id: id, name: name, screenName: screenName, imageUri: imageUri),
