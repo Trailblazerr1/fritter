@@ -1,5 +1,4 @@
-import 'dart:developer';
-
+import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_migration_plan/migration/sql.dart';
 import 'package:sqflite_migration_plan/sqflite_migration_plan.dart';
@@ -13,6 +12,8 @@ const String TABLE_SUBSCRIPTION_GROUP = 'subscription_group';
 const String TABLE_SUBSCRIPTION_GROUP_MEMBER = 'subscription_group_member';
 
 class Repository {
+  static final log = Logger('Repository');
+
   static Future<Database> readOnly() async {
     return openDatabase(DATABASE_NAME, readOnly: true, singleInstance: false);
   }
@@ -132,17 +133,24 @@ class Repository {
       14: [
         // Add a "verified" column to the subscriptions table
         SqlMigration('ALTER TABLE $TABLE_SUBSCRIPTION ADD COLUMN verified BOOLEAN DEFAULT false', reverseSql: 'ALTER TABLE $TABLE_SUBSCRIPTION DROP COLUMN verified')
+      ],
+      15: [
+        // Re-apply migration 14 in a different way, as it looks like it didn't apply for some people
+        SqlMigration('ALTER TABLE $TABLE_SUBSCRIPTION RENAME TO ${TABLE_SUBSCRIPTION}_old'),
+        SqlMigration('CREATE TABLE $TABLE_SUBSCRIPTION (id VARCHAR PRIMARY KEY, screen_name VARCHAR, name VARCHAR, profile_image_url_https VARCHAR, verified BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)'),
+        SqlMigration('INSERT INTO $TABLE_SUBSCRIPTION (id, screen_name, name, profile_image_url_https, created_at) SELECT id, screen_name, name, profile_image_url_https, created_at FROM ${TABLE_SUBSCRIPTION}_old'),
+        SqlMigration('DROP TABLE ${TABLE_SUBSCRIPTION}_old'),
       ]
     });
 
     await openDatabase(DATABASE_NAME,
-        version: 14,
+        version: 15,
         onUpgrade: myMigrationPlan,
         onCreate: myMigrationPlan,
         onDowngrade: myMigrationPlan
     );
 
-    log('Finished migrating database');
+    log.info('Finished migrating database');
 
     return true;
   }

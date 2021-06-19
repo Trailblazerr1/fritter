@@ -5,6 +5,7 @@ import 'package:dart_twitter_api/twitter_api.dart';
 import 'package:flutter/material.dart';
 import 'package:fritter/tweet/_video_controls.dart';
 import 'package:fritter/utils/downloads.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_player/video_player.dart';
 
@@ -19,6 +20,8 @@ class TweetVideo extends StatefulWidget {
 }
 
 class _TweetVideoState extends State<TweetVideo> {
+  static final log = Logger('_TweetVideoState');
+
   late VideoPlayerController _videoController;
   late ChewieController _chewieController;
 
@@ -45,7 +48,7 @@ class _TweetVideoState extends State<TweetVideo> {
 
             await downloadUriToPickedFile(url, fileName,
               onError: (response) {
-                log('Unable to save the media. The response was ${response.body}');
+                log.severe('Unable to save the media. The response was ${response.body}');
 
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('Unable to save the media. Twitter returned a status of ${response.statusCode}'),
@@ -69,6 +72,21 @@ class _TweetVideoState extends State<TweetVideo> {
       ],
       looping: widget.loop,
       videoPlayerController: _videoController,
+      errorBuilder: (context, errorMessage) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 42,
+              ),
+              Text(errorMessage)
+            ],
+          ),
+        );
+      },
     );
   }
 

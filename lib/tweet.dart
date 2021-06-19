@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:auto_direction/auto_direction.dart';
 import 'package:catcher/catcher.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fritter/client.dart';
 import 'package:fritter/home_model.dart';
@@ -13,6 +12,7 @@ import 'package:fritter/tweet/_card.dart';
 import 'package:fritter/tweet/_content.dart';
 import 'package:fritter/ui/futures.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -20,12 +20,16 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'tweet/_media.dart';
 
 class TweetTile extends StatelessWidget {
+  static final log = Logger('TweetTile');
+
   final ScrollController scrollController = ScrollController();
   final bool clickable;
   final String? currentUsername;
   final TweetWithCard? tweet;
+  final bool isPinned;
+  final bool isThread;
 
-  TweetTile({Key? key, required this.clickable, this.currentUsername, this.tweet}) : super(key: key);
+  TweetTile({Key? key, required this.clickable, this.currentUsername, this.tweet, this.isPinned = false, this.isThread = false}) : super(key: key);
 
   _createFooterIconButton(IconData icon, [Color? color, Function()? onPressed]) {
     return InkWell(
@@ -60,6 +64,20 @@ class TweetTile extends StatelessWidget {
       ? this.tweet!
       : this.tweet!.retweetedStatusWithCard!;
 
+    if (tweet.isTombstone ?? false) {
+      return Container(
+        width: double.infinity,
+        child: Card(
+          child: Container(
+            padding: EdgeInsets.all(16),
+            child: Text(tweet.text!, style: TextStyle(
+              fontStyle: FontStyle.italic
+            ))
+          ),
+        ),
+      );
+    }
+
     Widget media = Container();
     if (tweet.extendedEntities?.media != null && tweet.extendedEntities!.media!.isNotEmpty) {
       media = TweetMedia(media: tweet.extendedEntities!.media!);
@@ -68,35 +86,39 @@ class TweetTile extends StatelessWidget {
     Widget retweetBanner = Container();
     Widget retweetSidebar = Container();
     if (this.tweet!.retweetedStatusWithCard != null) {
-      retweetBanner = Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.only(bottom: 0, left: 52, right: 16, top: 12),
-        child: Container(
-          child: RichText(
-            text: TextSpan(
-                children: [
-                  WidgetSpan(
-                      child: Icon(Icons.repeat, size: 12, color: Theme.of(context).hintColor),
-                      alignment: PlaceholderAlignment.middle
-                  ),
-                  WidgetSpan(
-                      child: SizedBox(width: 16)
-                  ),
-                  TextSpan(
-                      text: '${this.tweet!.user!.name!} retweeted',
-                    style: TextStyle(
-                        color: Theme.of(context).hintColor
-                    )
-                  )
-                ]
-            ),
-          ),
-        ),
+      retweetBanner = _TweetTileLeading(
+        icon: Icons.repeat,
+        children: [
+          TextSpan(
+              text: '${this.tweet!.user!.name!} retweeted',
+              style: Theme.of(context).textTheme.caption
+          )
+        ],
       );
 
       retweetSidebar = Container(
           color: Theme.of(context).secondaryHeaderColor,
           width: 4
+      );
+    }
+
+    Widget replyToTile = Container();
+    var replyTo = tweet.inReplyToScreenName;
+    if (replyTo != null) {
+      replyToTile = _TweetTileLeading(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => StatusScreen(username: replyTo, id: tweet.inReplyToStatusIdStr!)));
+        },
+        icon: Icons.reply,
+        children: [
+          TextSpan(text: 'Replying to ', style: Theme.of(context).textTheme.caption),
+          TextSpan(
+              text: '@$replyTo',
+              style: Theme.of(context).textTheme.caption!.copyWith(
+                  fontWeight: FontWeight.bold
+              )
+          ),
+        ],
       );
     }
 
@@ -107,7 +129,7 @@ class TweetTile extends StatelessWidget {
     if (tweetText == null) {
       var message = 'The tweet did not contain any text. This is unexpected';
 
-      log(message);
+      log.severe(message);
 
       return Container(child: Text(
           'The tweet did not contain any text. This is unexpected'
@@ -146,37 +168,6 @@ class TweetTile extends StatelessWidget {
       );
     }
 
-    Widget replyToTile = Container();
-
-    var replyTo = tweet.inReplyToScreenName;
-    if (replyTo != null) {
-      replyToTile = Container(
-        alignment: Alignment.centerLeft,
-        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-        child: RichText(
-          text: TextSpan(
-              children: [
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Icon(Icons.reply, size: 14, color: Theme.of(context).primaryColorDark),
-                ),
-                WidgetSpan(
-                  child: SizedBox(width: 4)
-                ),
-                TextSpan(text: 'Replying to ', style: Theme.of(context).textTheme.caption),
-                TextSpan(
-                    text: '@$replyTo',
-                    style: Theme.of(context).textTheme.caption!.copyWith(color: Colors.blue),
-                    recognizer: TapGestureRecognizer()..onTap = () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: replyTo)));
-                    }
-                )
-              ]
-          ),
-        ),
-      );
-    }
-
     // Only create the tweet content if the tweet contains text
     Widget content = Container();
     if (tweet.displayTextRange![1] != 0) {
@@ -201,6 +192,27 @@ class TweetTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 retweetBanner,
+                replyToTile,
+                if (isPinned)
+                  _TweetTileLeading(
+                    icon: Icons.push_pin,
+                    children: [
+                      TextSpan(
+                          text: 'Pinned tweet',
+                          style: Theme.of(context).textTheme.caption
+                      )
+                    ]
+                  ),
+                if (isThread)
+                  _TweetTileLeading(
+                    icon: Icons.forum,
+                    children: [
+                      TextSpan(
+                          text: 'Thread',
+                          style: Theme.of(context).textTheme.caption
+                      )
+                    ]
+                  ),
                 ListTile(
                   onTap: () {
                     // If the tweet is by the currently-viewed profile, don't allow clicks as it doesn't make sense
@@ -237,7 +249,6 @@ class TweetTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                replyToTile,
                 content,
                 media,
                 quotedTweet,
@@ -307,12 +318,50 @@ class TweetTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ))
           ],
         ),
       ),
     ));
+  }
+}
+
+class _TweetTileLeading extends StatelessWidget {
+  final Function()? onTap;
+  final IconData icon;
+  final Iterable<InlineSpan> children;
+
+  const _TweetTileLeading({Key? key, this.onTap, required this.icon, required this.children}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(top: 16),
+      child: InkWell(
+        onTap: this.onTap,
+        child: Container(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.only(bottom: 0, left: 52, right: 16, top: 0),
+          child: Container(
+            child: RichText(
+              text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                        child: Icon(icon, size: 12, color: Theme.of(context).hintColor),
+                        alignment: PlaceholderAlignment.middle
+                    ),
+                    WidgetSpan(
+                        child: SizedBox(width: 16)
+                    ),
+                    ...children
+                  ]
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

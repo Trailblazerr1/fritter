@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:catcher/catcher.dart';
 import 'package:flutter/material.dart';
 
@@ -105,10 +107,7 @@ class FullPageErrorWidget extends FritterErrorWidget {
             margin: EdgeInsets.only(top: 12),
             child: ElevatedButton(
               child: Text('Report'),
-              onPressed: () => Catcher.reportCheckedError(
-                  ManuallyReportedException(error, stackTrace),
-                  stackTrace
-              ),
+              onPressed: () => Catcher.reportCheckedError(error, stackTrace),
             ),
           ),
           if (onRetry != null)
@@ -123,11 +122,4 @@ class FullPageErrorWidget extends FritterErrorWidget {
       ),
     );
   }
-}
-
-class ManuallyReportedException implements Exception {
-  final Object? error;
-  final Object? stackTrace;
-
-  ManuallyReportedException(this.error, this.stackTrace);
 }

@@ -1,1 +1,0 @@
-- Added verified icon next to users in the search and subscriptions screens

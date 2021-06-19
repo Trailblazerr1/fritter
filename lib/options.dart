@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info/device_info.dart';
@@ -17,11 +16,22 @@ import 'package:fritter/settings/settings_export_screen.dart';
 import 'package:fritter/ui/errors.dart';
 import 'package:fritter/ui/futures.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:package_info/package_info.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+String getFlavor() {
+  const flavor = String.fromEnvironment('app.flavor');
+
+  if (flavor == '') {
+    return 'fdroid';
+  }
+
+  return flavor;
+}
 
 class OptionsScreen extends StatefulWidget {
   @override
@@ -29,6 +39,8 @@ class OptionsScreen extends StatefulWidget {
 }
 
 class _OptionsScreenState extends State<OptionsScreen> {
+  static final log = Logger('_OptionsScreenState');
+
   String _createVersionString(PackageInfo packageInfo) {
     return 'v${packageInfo.version}+${packageInfo.buildNumber}';
   }
@@ -99,6 +111,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
       metadata = {
         'abis': info.supportedAbis,
         'device': info.device,
+        'flavor': getFlavor(),
         'locale': Localizations.localeOf(context).languageCode,
         'os': 'android',
         'system': info.version.sdkInt.toString(),
@@ -110,6 +123,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
       metadata = {
         'abis': [],
         'device': info.utsname.machine,
+        'flavor': getFlavor(),
         'locale': Localizations.localeOf(context).languageCode,
         'os': 'ios',
         'system': info.systemVersion,
@@ -146,12 +160,15 @@ class _OptionsScreenState extends State<OptionsScreen> {
                       snackBar = SnackBar(
                         content: Text('Thanks for helping Fritter! 💖'),
                       );
+
+                      // Mark that we've said hello from this build version
+                      await prefService.set(OPTION_HELLO_LAST_BUILD, packageInfo.buildNumber);
                     } else if (response.statusCode == 403) {
                       snackBar = SnackBar(
                         content: Text('It looks like you\'ve already sent a ping recently 🤔'),
                       );
                     } else {
-                      log('Unable to send the ping');
+                      log.severe('Unable to send the ping');
 
                       snackBar = SnackBar(
                         content: Text('Unable to send the ping. The status code was ${response.statusCode}'),
@@ -160,20 +177,18 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   } on TimeoutException catch (e, stackTrace) {
-                    log('Timed out trying to send the ping', error: e, stackTrace: stackTrace);
+                    log.severe('Timed out trying to send the ping', e, stackTrace);
 
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Timed out trying to send the ping 😢'),
                     ));
                   } catch (e, stackTrace) {
-                    log('Unable to send', error: e, stackTrace: stackTrace);
+                    log.severe('Unable to send', e, stackTrace);
 
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Unable to send the ping. ${e.toString()}'),
                     ));
                   }
-
-                  await prefService.set(OPTION_HELLO_LAST_BUILD, packageInfo.buildNumber);
 
                   Navigator.pop(context);
                 },
@@ -198,8 +213,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const appFlavor = String.fromEnvironment('app.flavor');
-
     return Scaffold(
       appBar: AppBar(),
       body: FutureBuilderWrapper<PackageInfo>(
@@ -287,7 +300,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
                               try {
                                 await _importFromFile(file);
                               } catch (e, stackTrace) {
-                                log('Unable to import the file on a legacy Android device', error: e, stackTrace: stackTrace);
+                                log.severe('Unable to import the file on a legacy Android device', e, stackTrace);
 
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                   content: Text('$e'),
@@ -337,6 +350,15 @@ class _OptionsScreenState extends State<OptionsScreen> {
             ),
 
             PrefTitle(
+              title: Text('Logging')
+            ),
+            PrefCheckbox(
+              title: Text('Enable Sentry?'),
+              subtitle: Text('Whether errors should be reported to Sentry'),
+              pref: OPTION_ERRORS_SENTRY_ENABLED,
+            ),
+
+            PrefTitle(
                 title: Text('About')
             ),
             PrefLabel(
@@ -363,7 +385,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
               subtitle: Text('Let the developers know if something\'s broken'),
               onTap: () => launch('https://github.com/jonjomckay/fritter/issues'),
             ),
-            if (appFlavor != 'play')
+            if (getFlavor() != 'play')
               PrefLabel(
                 leading: Icon(Icons.attach_money),
                 title: Text('Donate'),
