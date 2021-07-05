@@ -1,5 +1,6 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fritter/constants.dart';
 import 'package:fritter/database/entities.dart';
 import 'package:fritter/home_model.dart';
 import 'package:fritter/ui/errors.dart';
@@ -9,6 +10,36 @@ import 'package:sqflite/sqflite.dart';
 
 import 'database/repository.dart';
 import 'profile/profile.dart';
+
+class UserAvatar extends StatelessWidget {
+  final String? uri;
+
+  const UserAvatar({Key? key, required this.uri}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var uri = this.uri;
+    if (uri == null) {
+      return Container(width: 48, height: 48);
+    } else {
+      return ExtendedImage.network(
+        // TODO: This can error if the profile image has changed... use SWR-like
+        uri.replaceAll('normal', '200x200'),
+        width: 48,
+        height: 48,
+        loadStateChanged: (state) {
+          switch (state.extendedImageLoadState) {
+            case LoadState.failed:
+              return Icon(Icons.error);
+            default:
+              return state.completedWidget;
+          }
+        },
+      );
+    }
+  }
+}
+
 
 class UserTile extends StatelessWidget {
   final String id;
@@ -21,31 +52,11 @@ class UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var imageUri = this.imageUri;
-
-    var image = imageUri == null
-        ? Container(width: 48, height: 48)
-        : ExtendedImage.network(
-            // TODO: This can error if the profile image has changed... use SWR-like
-            imageUri.replaceAll('normal', '200x200'),
-            cache: true,
-            width: 48,
-            height: 48,
-            loadStateChanged: (state) {
-              switch (state.extendedImageLoadState) {
-                case LoadState.failed:
-                  return Icon(Icons.error);
-                default:
-                  return state.completedWidget;
-              }
-            },
-          );
-
     return ListTile(
       dense: true,
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(64),
-        child: image,
+        child: UserAvatar(uri: imageUri),
       ),
       title: Row(
         children: [
@@ -62,7 +73,7 @@ class UserTile extends StatelessWidget {
         child: FollowButton(id: id, name: name, screenName: screenName, imageUri: imageUri, verified: verified),
       ),
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: screenName)));
+        Navigator.pushNamed(context, ROUTE_PROFILE, arguments: screenName);
       },
     );
   }

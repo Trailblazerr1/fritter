@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:dart_twitter_api/src/utils/date_utils.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
@@ -156,12 +155,34 @@ class Twitter {
     });
 
     var response = await _twitterApi.client.get(uri);
-    var content = jsonDecode(response.body);
+    var content = jsonDecode(response.body) as Map<String, dynamic>;
+
+    var hasErrors = content.containsKey('errors');
+    if (hasErrors && content['errors'] != null) {
+      var errors = List.from(content['errors']);
+      if (errors.isEmpty) {
+        throw TwitterError(code: 0, message: 'Unknown error');
+      } else {
+        throw TwitterError(code: errors.first['code'], message: errors.first['message']);
+      }
+    }
 
     return User.fromJson({
       ...content['data']['user']['legacy'],
       'id_str': content['data']['user']['rest_id']
     });
+  }
+
+  static Future<Follows> getProfileFollows(String screenName, String type, { int? cursor, int? count = 200 }) async {
+    var response = type == 'following'
+      ? await _twitterApi.userService.friendsList(screenName: screenName, cursor: cursor, count: count, skipStatus: true)
+      : await _twitterApi.userService.followersList(screenName: screenName, cursor: cursor, count: count, skipStatus: true);
+
+    return Follows(
+      cursorBottom: int.parse(response.nextCursorStr ?? '-1'),
+      cursorTop: int.parse(response.previousCursorStr ?? '-1'),
+      users: response.users ?? []
+    );
   }
 
   static List<TweetChain> createTweetChains(dynamic globalTweets, dynamic globalUsers, dynamic instructions) {
@@ -362,7 +383,10 @@ class Twitter {
       if (pinEntry != null) {
         var id = pinEntry['pinEntry']['entry']['content']['item']['content']['tweet']['id'] as String;
 
-        chains.insert(0, TweetChain(id: id, tweets: [tweets[id]!], isPinned: true));
+        // It's possible for the pinned tweet to either not exist, or not be returned, so handle that
+        if (tweets.containsKey(id)) {
+          chains.insert(0, TweetChain(id: id, tweets: [tweets[id]!], isPinned: true));
+        }
       }
     }
 
@@ -551,6 +575,14 @@ class TweetChain {
   TweetChain({required this.id, required this.tweets, required this.isPinned});
 }
 
+class Follows {
+  final int? cursorBottom;
+  final int? cursorTop;
+  final List<User> users;
+
+  Follows({required this.cursorBottom, required this.cursorTop, required this.users});
+}
+
 class TweetStatus {
   // final TweetChain after;
   // final TweetChain before;
@@ -560,4 +592,11 @@ class TweetStatus {
   final List<TweetChain> chains;
 
   TweetStatus({required this.tweet, required this.chains, required this.cursorBottom, required this.cursorTop});
+}
+
+class TwitterError {
+  final int code;
+  final String message;
+
+  TwitterError({ required this.code, required this.message });
 }

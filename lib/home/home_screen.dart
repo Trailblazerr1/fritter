@@ -1,13 +1,13 @@
-import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fritter/constants.dart';
 import 'package:fritter/database/entities.dart';
 import 'package:fritter/home/_feed.dart';
 import 'package:fritter/home/_saved.dart';
-import 'package:fritter/home/_subscriptions.dart';
+import 'package:fritter/subscriptions/subscriptions.dart';
 import 'package:fritter/home/_search.dart';
-import 'package:fritter/home/_trends.dart';
-import 'package:fritter/options.dart';
+import 'package:fritter/trends/trends.dart';
+import 'package:fritter/settings/settings.dart';
+import 'package:fritter/user.dart';
 import 'package:pref/pref.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
@@ -33,10 +33,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final _children = [
-    FeedContent(),
-    SubscriptionsContent(),
-    TrendsContent(),
-    SavedContent(),
+    FeedScreen(),
+    SubscriptionsScreen(),
+    TrendsScreen(),
+    SavedScreen(),
   ];
 
   late TabController _tabController;
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => OptionsScreen()));
+              Navigator.pushNamed(context, ROUTE_SETTINGS);
             },
           )
         ],
@@ -128,30 +128,11 @@ class _SubscriptionCheckboxListState extends State<SubscriptionCheckboxList> {
 
                   var e = widget.subscriptions[index];
 
-                  // TODO: This is just copied from UserTile
-                  var image = e.profileImageUrlHttps == null
-                      ? Container(width: 48, height: 48)
-                      : ExtendedImage.network(
-                      // TODO: This can error if the profile image has changed... use SWR-like
-                      e.profileImageUrlHttps!.replaceAll('normal', '200x200'),
-                      cache: true,
-                      width: 40,
-                      height: 40,
-                      loadStateChanged: (state) {
-                        switch (state.extendedImageLoadState) {
-                          case LoadState.failed:
-                            return Icon(Icons.error);
-                          default:
-                            return state.completedWidget;
-                        }
-                      },
-                  );
-
                   return CheckboxListTile(
                     dense: true,
                     secondary: ClipRRect(
                       borderRadius: BorderRadius.circular(64),
-                      child: image,
+                      child: UserAvatar(uri: e.profileImageUrlHttps),
                     ),
                     title: Text(e.name),
                     subtitle: Text('@${e.screenName}'),

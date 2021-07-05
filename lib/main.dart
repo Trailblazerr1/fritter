@@ -7,14 +7,18 @@ import 'package:catcher/catcher.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fritter/catcher/null_handler.dart';
 import 'package:fritter/catcher/sentry_handler.dart';
 import 'package:fritter/constants.dart';
 import 'package:fritter/database/repository.dart';
+import 'package:fritter/group/group_screen.dart';
 import 'package:fritter/home/home_screen.dart';
 import 'package:fritter/home_model.dart';
-import 'package:fritter/options.dart';
+import 'package:fritter/settings/settings.dart';
 import 'package:fritter/profile/profile.dart';
+import 'package:fritter/settings/settings_export_screen.dart';
 import 'package:fritter/status.dart';
+import 'package:fritter/subscriptions/_import.dart';
 import 'package:fritter/ui/errors.dart';
 import 'package:fritter/ui/futures.dart';
 import 'package:http/http.dart' as http;
@@ -36,6 +40,10 @@ Future checkForUpdates() async {
       var result = jsonDecode(response.body);
 
       var flavor = getFlavor();
+      if (flavor == 'play') {
+        // Don't check for updates for the Play Store build
+        return;
+      }
 
       var release = result['versions'][flavor]['stable'];
       var latest = release['versionCode'];
@@ -56,8 +64,6 @@ Future checkForUpdates() async {
               0, 'An update for Fritter is available! 🚀',
               'Tap to download ${release['version']}', details,
               payload: release['apk']);
-        } else if (flavor == 'play') {
-          // Don't check for updates for the Play Store build
         } else {
           await FlutterLocalNotificationsPlugin().show(
               0, 'An update for Fritter is available! 🚀',
@@ -108,7 +114,9 @@ Future<void> main() async {
       dialogReportModeAccept: 'Send',
       dialogReportModeCancel: "Don't send"
     )
-  ], customParameters: {
+  ], explicitExceptionHandlersMap: {
+    'SocketException': NullHandler()
+  }, customParameters: {
     'flavor': getFlavor()
   });
 
@@ -121,7 +129,10 @@ Future<void> main() async {
         log(event.message, error: event.error, stackTrace: event.stackTrace);
 
         if (event.level.value >= 900) {
-          Catcher.reportCheckedError(event.error, event.stackTrace);
+          // Don't report internal Catcher errors, as it'll cause a loop
+          if (event.loggerName != 'Catcher') {
+            Catcher.reportCheckedError(event.error, event.stackTrace);
+          }
         }
       });
 
@@ -237,6 +248,16 @@ class _MyAppState extends State<MyApp> {
       theme: FlexColorScheme.light(colors: fritterColorScheme.light).toTheme,
       darkTheme: FlexColorScheme.dark(colors: fritterColorScheme.dark, darkIsTrueBlack: _trueBlack).toTheme,
       themeMode: themeMode,
+      initialRoute: '/',
+      routes: {
+        '/': (context) => DefaultPage(),
+        ROUTE_GROUP: (context) => GroupScreen(),
+        ROUTE_PROFILE: (context) => ProfileScreen(),
+        ROUTE_SETTINGS: (context) => SettingsScreen(),
+        ROUTE_SETTINGS_EXPORT: (context) => SettingsExportScreen(),
+        ROUTE_STATUS: (context) => StatusScreen(),
+        ROUTE_SUBSCRIPTIONS_IMPORT: (context) => SubscriptionImportScreen()
+      },
       builder: (context, child) {
         // Replace the default red screen of death with a slightly friendlier one
         ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -249,7 +270,6 @@ class _MyAppState extends State<MyApp> {
 
         return child ?? Container();
       },
-      home: DefaultPage(),
     );
   }
 }
@@ -265,7 +285,7 @@ class _DefaultPageState extends State<DefaultPage> {
   void handleInitialLink(Uri link) {
     // Assume it's a username if there's only one segment
     if (link.pathSegments.length == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: link.pathSegments.first)));
+      Navigator.pushNamed(context, ROUTE_PROFILE, arguments: link.pathSegments.first);
       return;
     }
 
@@ -275,7 +295,10 @@ class _DefaultPageState extends State<DefaultPage> {
         var username = link.pathSegments[0];
         var statusId = link.pathSegments[2];
 
-        Navigator.push(context, MaterialPageRoute(builder: (context) => StatusScreen(username: username, id: statusId)));
+        Navigator.pushNamed(context, ROUTE_STATUS, arguments: StatusScreenArguments(
+          id: statusId,
+          username: username,
+        ));
         return;
       }
     }
