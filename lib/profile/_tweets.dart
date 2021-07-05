@@ -40,7 +40,7 @@ class _TweetConversationState extends State<TweetConversation> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              margin: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              margin: EdgeInsets.symmetric(vertical: 2, horizontal: 2),
               color: Colors.white,
               width: 4,
             ),

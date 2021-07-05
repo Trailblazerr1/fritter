@@ -68,7 +68,10 @@ class TweetTile extends StatelessWidget {
         width: double.infinity,
         child: Card(
           child: Container(
-            padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+              border: Border.all(width: 5.0 )
+            ),
+            padding: EdgeInsets.all(0.1),
             child: Text(tweet.text!, style: TextStyle(
               fontStyle: FontStyle.italic
             ))
@@ -157,6 +160,9 @@ class TweetTile extends StatelessWidget {
         );
       } else {
         quotedTweetTile = Container(
+                        decoration: BoxDecoration(
+              border: Border.all(width: 5.0 )
+            ),
           width: double.infinity,
           margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           child: Text('This tweet is unavailable', style: TextStyle(
@@ -183,7 +189,7 @@ class TweetTile extends StatelessWidget {
       content = Container(
         // Fill the width so both RTL and LTR text are displayed correctly
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 0.2, horizontal: 4),
         child: AutoDirection(
           text: tweetText,
           child: TweetContent(tweet: tweet),
@@ -236,7 +242,8 @@ class TweetTile extends StatelessWidget {
                       Flexible(child: Text(tweet.user!.name!,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontWeight: FontWeight.w500
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black
                         )
                       )),
                       if (tweet.user!.verified ?? false)
@@ -256,17 +263,13 @@ class TweetTile extends StatelessWidget {
                           style: Theme.of(context).textTheme.caption)
                     ],
                   ),
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(64),
-                    child: UserAvatar(uri: tweet.user!.profileImageUrlHttps),
-                  ),
                 ),
                 content,
                 media,
                 quotedTweet,
                 TweetCard(tweet: tweet, card: tweet.card),
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8),
+                  margin: EdgeInsets.symmetric(horizontal: 4),
                   child: Scrollbar(
                     controller: scrollController,
                     isAlwaysShown: true,
@@ -310,7 +313,7 @@ class TweetTile extends StatelessWidget {
                           _createFooterIconButton(Icons.share, null, () async {
                             var createShareDialogItem = (String text, String shareContent) => SimpleDialogOption(
                               child: Container(
-                                margin: EdgeInsets.symmetric(vertical: 8),
+                                margin: EdgeInsets.symmetric(vertical: 4),
                                 child: Text(text, style: TextStyle(
                                     fontSize: 16
                                 )),
@@ -320,7 +323,7 @@ class TweetTile extends StatelessWidget {
 
                             showDialog(context: context, builder: (context) {
                               return SimpleDialog(
-                                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                contentPadding: EdgeInsets.symmetric(vertical: 4),
                                 children: [
                                   createShareDialogItem('Share tweet content', tweetText),
                                   createShareDialogItem('Share tweet link', 'https://twitter.com/${tweet.user!.screenName}/status/${tweet.idStr}'),
@@ -367,7 +370,7 @@ class _TweetTileLeading extends StatelessWidget {
                         alignment: PlaceholderAlignment.middle
                     ),
                     WidgetSpan(
-                        child: SizedBox(width: 16)
+                        child: SizedBox(width: 8)
                     ),
                     ...children
                   ]

@@ -21,7 +21,7 @@ class TweetCard extends StatelessWidget {
 
   _createBaseCard(Widget child) {
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 12),
+        margin: EdgeInsets.symmetric(horizontal: 0),
         width: double.infinity,
         child: Card(
           clipBehavior: Clip.antiAlias,
@@ -56,19 +56,19 @@ class TweetCard extends StatelessWidget {
     }
 
     return AspectRatio(
-      aspectRatio: aspectRatio ?? image['width'] / image['height'],
+      aspectRatio: aspectRatio ?? image['width'] / (image['height']/8),
       child: child,
     );
   }
 
   _createListTile(BuildContext context, String title, String? description, String? uri) {
     return Container(
-      padding: EdgeInsets.only(left: 12, right: 12, bottom: 4),
+      padding: EdgeInsets.only(left: 0, right: 0, bottom: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: EdgeInsets.only(top: 4),
+            margin: EdgeInsets.only(top: 0),
             child: Text(
               title,
               overflow: TextOverflow.ellipsis,
@@ -82,7 +82,7 @@ class TweetCard extends StatelessWidget {
           ),
           if (description != null)
             Container(
-              margin: EdgeInsets.only(top: 4),
+              margin: EdgeInsets.only(top: 0),
               child: Text(
                 description,
                 overflow: TextOverflow.ellipsis,
@@ -95,7 +95,7 @@ class TweetCard extends StatelessWidget {
             ),
           if (uri != null)
             Container(
-              margin: EdgeInsets.only(top: 8),
+              margin: EdgeInsets.only(top: 0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -176,7 +176,7 @@ class TweetCard extends StatelessWidget {
                 'height': image['original_info']['height'],
               }, BoxFit.contain),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 2),
               child: _createListTile(
                   context,
                   unifiedCard['component_objects']['details_1']['data']['title']['content'],
@@ -208,13 +208,13 @@ class TweetCard extends StatelessWidget {
     }
 
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16),
+        margin: EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           children: [
             ...List.generate(numberOfChoices, (index) => _createVoteBar(context, card, total, ++index)),
             Container(
               alignment: Alignment.centerRight,
-              margin: EdgeInsets.only(top: 8),
+              margin: EdgeInsets.only(top: 2),
               child: RichText(
                 text: TextSpan(
                     children: [
@@ -285,7 +285,7 @@ class TweetCard extends StatelessWidget {
             if (imageSize != 'disabled')
               _createImage(imageSize, image, BoxFit.contain),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 3),
               child: _createListTile(
                 context,
                 card['binding_values']['title']['string_value'],
@@ -300,7 +300,7 @@ class TweetCard extends StatelessWidget {
 
         return _createCard(_findCardUrl(card), Row(
           children: [
-            Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.cover, aspectRatio: 1)),
+            Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.cover, aspectRatio: 0.7)),
             Expanded(flex: 4, child: _createListTile(
               context,
               card['binding_values']['title']['string_value'],

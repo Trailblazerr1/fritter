@@ -99,7 +99,7 @@ class _StatusScreenBodyState extends State<StatusScreenBody> {
         children: [
           TweetTile(currentUsername: widget.username, tweet: widget.status.tweet, clickable: false),
           Padding(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(2),
             child: Column(
               children: [...comments],
             ),
