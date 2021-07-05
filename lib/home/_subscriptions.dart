@@ -1,502 +1,330 @@
-import 'package:catcher/catcher.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'dart:convert';
+
+import 'package:dart_twitter_api/twitter_api.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fritter/client.dart';
 import 'package:fritter/constants.dart';
-import 'package:fritter/database/entities.dart';
-import 'package:fritter/group/group_screen.dart';
-import 'package:fritter/home/home_screen.dart';
-import 'package:fritter/home_model.dart';
-import 'package:fritter/ui/errors.dart';
-import 'package:fritter/ui/futures.dart';
-import 'package:fritter/user.dart';
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:pref/pref.dart';
-import 'package:provider/provider.dart';
-import 'package:reactive_forms/reactive_forms.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:url_launcher/url_launcher.dart';
 
-class SubscriptionGroupFragment extends StatefulWidget {
-  final ScrollController controller;
+class TweetCard extends StatelessWidget {
+  static final log = Logger('TweetCard');
 
-  const SubscriptionGroupFragment({Key? key, required this.controller}) : super(key: key);
+  final TweetWithCard tweet;
+  final Map<String, dynamic>? card;
 
-  @override
-  _SubscriptionGroupFragmentState createState() => _SubscriptionGroupFragmentState();
-}
+  const TweetCard({Key? key, required this.tweet, required this.card}) : super(key: key);
 
-class _SubscriptionGroupFragmentState extends State<SubscriptionGroupFragment> {
-  late String _orderSubscriptionGroupsByField;
-  late bool _orderSubscriptionGroupsAscending;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    var prefs = PrefService.of(context);
-
-    setState(() {
-      _orderSubscriptionGroupsAscending = prefs.get(OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_ASCENDING) ?? true;
-      _orderSubscriptionGroupsByField = prefs.get(OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_FIELD) ?? 'name';
-    });
+  _createBaseCard(Widget child) {
+    return Container(
+        margin: EdgeInsets.symmetric(horizontal: 12),
+        width: double.infinity,
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          color: Colors.blue,
+          child: child,
+        )
+    );
   }
 
-  void _onChangeOrderSubscriptionGroupsBy(String? value) {
-    var prefs = PrefService.of(context);
-
-    prefs.set(OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_FIELD, value);
-
-    setState(() {
-      this._orderSubscriptionGroupsByField = value ?? 'name';
-    });
+  _createCard(String? url, Widget child) {
+    return GestureDetector(
+      child: _createBaseCard(child),
+      onTap: () => url == null ? null : launch(url),
+    );
   }
 
-  void _onToggleOrderSubscriptionGroupsAscending() {
-    var prefs = PrefService.of(context);
-    var value = !_orderSubscriptionGroupsAscending;
+  _createImage(String size, Map<String, dynamic>? image, BoxFit fit, { double? aspectRatio }) {
+    if (image == null) {
+      return Container();
+    }
 
-    prefs.set(OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_ASCENDING, value);
+    Widget child;
 
-    setState(() {
-      this._orderSubscriptionGroupsAscending = value;
-    });
-  }
-
-  void openDeleteSubscriptionGroupDialog(String id, String name) {
-    var model = context.read<HomeModel>();
-
-    showDialog(context: context, builder: (context) {
-      return AlertDialog(
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('No'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await model.deleteSubscriptionGroup(id);
-
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Text('Yes'),
-          ),
-        ],
-        title: Text('Are you sure?'),
-        content: Text('Are you sure you want to delete the subscription group $name?'),
+    if (size == 'disabled') {
+      child = Container();
+    } else {
+      child = ExtendedImage.network(
+        image['url'],
+        cache: true,
+        fit: fit,
       );
-    });
+    }
+
+    return AspectRatio(
+      aspectRatio: aspectRatio ?? image['width'] / image['height'],
+      child: child,
+    );
   }
 
-  void openSubscriptionGroupDialog(String? id, String name) {
-    var model = context.read<HomeModel>();
-
-    showDialog(context: context, builder: (context) {
-      return FutureBuilderWrapper<SubscriptionGroupEdit>(
-        future: model.loadSubscriptionGroupEdit(id),
-        onError: (error, stackTrace) => AlertErrorWidget(error: error, stackTrace: stackTrace, prefix: 'Unable to load the subscription group'),
-        onReady: (edit) {
-          final form = FormGroup({
-            'name': FormControl<String>(
-                value: name,
-                validators: [Validators.required],
-                touched: true
+  _createListTile(BuildContext context, String title, String? description, String? uri) {
+    return Container(
+      padding: EdgeInsets.only(left: 12, right: 12, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: EdgeInsets.only(top: 4),
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500
+              ),
             ),
-            'subscriptions': FormArray<bool>(
-                edit.allSubscriptions
-                    .map((e) => FormControl<bool>(value: edit.members.contains(e.id)))
-                    .toList(growable: false)
-            )
-          });
-
-          return ReactiveForm(
-              formGroup: form,
-              child: AlertDialog(
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      var control = form.control('subscriptions') as FormArray<bool?>;
-
-                      var value = control.value;
-                      if (value == null || value.isEmpty || value.every((e) => e == false)) {
-                        // If no subscriptions are selected, mark them all as selected
-                        control.updateValue(edit.allSubscriptions
-                            .map((e) => true)
-                            .toList(growable: false));
-                      } else {
-                        // If one or more subscriptions are selected, deselect them all
-                        control.updateValue(edit.allSubscriptions
-                            .map((e) => false)
-                            .toList(growable: false));
-                      }
-                    },
-                    child: Text('Toggle All'),
-                  ),
-                  TextButton(
-                    onPressed: id == null
-                        ? null
-                        : () => openDeleteSubscriptionGroupDialog(id, name),
-                    child: Text('Delete'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancel'),
-                  ),
-                  ReactiveFormConsumer(
-                    builder: (context, form, child) {
-                      var onPressed = () async {
-                        var selectedSubscriptions = (form.control('subscriptions').value as List<bool?>)
-                            .asMap().entries
-                            .map((e) {
-                          var index = e.key;
-                          var value = e.value;
-                          if (value != null && value == true) {
-                            return edit.allSubscriptions[index];
-                          }
-
-                          return null;
-                        })
-                            .where((element) => element != null)
-                            .cast<Subscription>()
-                            .toList(growable: false);
-
-                        await model.saveSubscriptionGroup(
-                            id,
-                            form.control('name').value,
-                            selectedSubscriptions
-                        );
-
-                        Navigator.pop(context);
-                      };
-
-                      return TextButton(
-                        child: Text('OK'),
-                        onPressed: form.valid
-                            ? onPressed
-                            : null,
-                      );
-                    },
+          ),
+          if (description != null)
+            Container(
+              margin: EdgeInsets.only(top: 4),
+              child: Text(
+                description,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                style: Theme.of(context).textTheme.bodyText2!.copyWith(
+                    color: Colors.white,
+                    fontSize: 12
+                ),
+              ),
+            ),
+          if (uri != null)
+            Container(
+              margin: EdgeInsets.only(top: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.link, size: 12, color: Colors.white),
+                  SizedBox(width: 4),
+                  Text(
+                    uri,
+                    style: Theme.of(context).textTheme.caption!.copyWith(
+                      color: Colors.white,
+                    )
                   ),
                 ],
-                content: Container(
-                  width: double.maxFinite,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ReactiveTextField(
-                        formControlName: 'name',
-                        decoration: InputDecoration(
-                            border: UnderlineInputBorder(),
-                            hintText: 'Name'
-                        ),
-                        validationMessages: (control) => {
-                          ValidationMessage.required: 'Please enter a name',
-                        },
-                      ),
-                      Expanded(
-                        child: SubscriptionCheckboxList(
-                          subscriptions: edit.allSubscriptions,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              )
-          );
-        },
-      );
-    });
+              ),
+            )
+        ],
+      ),
+    );
   }
 
-  Widget _createGroupCard(IconData icon, String id, String name, int? numberOfMembers, void Function()? onLongPress) {
-    var title = numberOfMembers == null
-        ? name
-        : '$name ($numberOfMembers)';
+  _createVoteBar(BuildContext context, Map<String, dynamic> card, double total, int choiceIndex) {
+    var choiceCount = double.parse(card['binding_values']['choice${choiceIndex}_count']['string_value']);
+    var choicePercent = (100 / total) * choiceCount;
 
-    return Card(
-      child: InkWell(
-        onTap: () {
-          // Open page with the group's feed
-          Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionGroupScreen(id: id, name: name)));
-        },
-        onLongPress: onLongPress,
+    var theme = Theme.of(context);
+    var textColor = theme.brightness == Brightness.light
+        ? Colors.black
+        : Colors.white;
+
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 4),
+      child: Stack(alignment: Alignment.center, children: [
+        SizedBox(
+          height: 24,
+          child: LinearProgressIndicator(
+            value: choicePercent / 100,
+            color: theme.brightness == Brightness.light
+              ? Colors.blue.withOpacity(0.3)
+              : Colors.blue.withOpacity(0.7)
+          ),
+        ),
+        Container(
+            alignment: Alignment.centerLeft,
+            margin: EdgeInsets.symmetric(horizontal: 8),
+            child: RichText(
+              text: TextSpan(
+                  children: [
+                    TextSpan(text: '${choicePercent.toStringAsFixed(1)}% ', style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold
+                    )),
+                    TextSpan(text: card['binding_values']['choice${choiceIndex}_label']['string_value'], style: TextStyle(
+                      color: textColor,
+                    ))
+                  ]
+              ),
+            )
+        ),
+      ]),
+    );
+  }
+
+  _createUnifiedCard(BuildContext context, Map<String, dynamic> card, String imageKey, String imageSize) {
+    var unifiedCard = jsonDecode(card['binding_values']['unified_card']['string_value']) as Map<String, dynamic>;
+
+    switch (unifiedCard['type']) {
+      case 'image_website':
+        var image = unifiedCard['media_entities'][unifiedCard['component_objects']['media_1']['data']['id']];
+        var uri = unifiedCard['destination_objects']['browser_1']['data']['url_data']['url'];
+
+        return _createCard(uri, Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (imageSize != 'disabled')
+              _createImage(imageSize, {
+                'url': image['media_url_https'],
+                'width': image['original_info']['width'],
+                'height': image['original_info']['height'],
+              }, BoxFit.contain),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+              child: _createListTile(
+                  context,
+                  unifiedCard['component_objects']['details_1']['data']['title']['content'],
+                  unifiedCard['component_objects']['details_1']['data']['subtitle']['content'],
+                  null
+              ),
+            ),
+          ],
+        ));
+      default:
+        log.warning('Unsupported unified card type ${unifiedCard['type']} encountered');
+        return Container();
+    }
+  }
+
+  _createVoteCard(BuildContext context, Map<String, dynamic> card, int numberOfChoices) {
+    var numberFormat = NumberFormat.decimalPattern();
+
+    var total = List.generate(numberOfChoices, (index) => double.parse(card['binding_values']['choice${++index}_count']['string_value']))
+      .reduce((value, element) => value + element);
+
+    String endsAtText;
+
+    var endsAt = DateTime.parse(card['binding_values']['end_datetime_utc']['string_value']);
+    if (endsAt.isBefore(DateTime.now())) {
+      endsAtText = 'Ended ${timeago.format(endsAt, allowFromNow: true)}';
+    } else {
+      endsAtText = 'Ends ${timeago.format(endsAt, allowFromNow: true)}';
+    }
+
+    return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
+            ...List.generate(numberOfChoices, (index) => _createVoteBar(context, card, total, ++index)),
             Container(
-              color: Colors.white10,
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Icon(icon, size: 16),
-            ),
-            Expanded(child: Container(
-              alignment: Alignment.center,
-              color: Theme.of(context).highlightColor,
-              width: double.infinity,
-              padding: EdgeInsets.all(4),
-              child: Text(title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold
-                  )
+              alignment: Alignment.centerRight,
+              margin: EdgeInsets.only(top: 8),
+              child: RichText(
+                text: TextSpan(
+                    children: [
+                      TextSpan(text: '${numberFormat.format(total)} votes'),
+                      TextSpan(text: ' • '),
+                      TextSpan(text: endsAtText)
+                    ]
+                ),
               ),
+            )
+          ],
+        )
+    );
+  }
+
+  String? _findCardUrl(Map<String, dynamic> card) {
+    var link = card['url'];
+    var urls = tweet.entities?.urls ?? [];
+
+    // Match up the card's URL with the link in the tweet entities, otherwise just use the card's URL
+    var url = urls.firstWhere((element) => element.url == link, orElse: () => Url.fromJson({
+      'expanded_url': link
+    }));
+
+    return url.expandedUrl;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var card = this.card;
+    if (card == null) {
+      return Container();
+    }
+
+    var imageKey = '';
+    var imageSize = PrefService.of(context, listen: false).get(OPTION_MEDIA_SIZE);
+    if (imageSize == 'thumb') {
+      imageKey = '_small';
+    } else if (imageSize == 'medium') {
+      imageKey = '_large';
+    } else if (imageSize == 'large') {
+      imageKey = '_x_large';
+    }
+
+    switch (card['name']) {
+      case 'summary':
+        var image = card['binding_values']['thumbnail_image$imageKey']?['image_value'];
+
+        return _createCard(_findCardUrl(card), Row(
+          children: [
+            if (imageSize != 'disabled')
+              Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.contain)),
+            Expanded(flex: 4, child: _createListTile(
+              context,
+              card['binding_values']['title']['string_value'],
+              card['binding_values']?['description']?['string_value'],
+              card['binding_values']?['vanity_url']?['string_value']
             ))
           ],
-        ),
-      ),
-    );
-  }
+        ));
+      case 'summary_large_image':
+        var image = card['binding_values']['thumbnail_image$imageKey']?['image_value'];
 
-  @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        title: Text('Groups', style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black
-        )),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        return _createCard(_findCardUrl(card), Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PopupMenuButton<String>(
-              icon: Icon(Icons.sort),
-              itemBuilder: (context) => [
-                const PopupMenuItem(child: Text('Name'), value: 'name'),
-                const PopupMenuItem(child: Text('Date Created'), value: 'created_at'),
-              ],
-              onSelected: (value) => _onChangeOrderSubscriptionGroupsBy(value),
-            ),
-            IconButton(
-              icon: Icon(Icons.sort_by_alpha),
-              onPressed: () => _onToggleOrderSubscriptionGroupsAscending(),
-            )
-          ],
-        ),
-        children: [
-          Consumer<HomeModel>(builder: (context, model, child) {
-            return FutureBuilderWrapper<List<SubscriptionGroup>>(
-              future: model.listSubscriptionGroups(orderBy: _orderSubscriptionGroupsByField, orderByAscending: _orderSubscriptionGroupsAscending),
-              onError: (error, stackTrace) => FullPageErrorWidget(error: error, stackTrace: stackTrace, prefix: 'Unable to list your subscription groups'),
-              onReady: (groups) => Container(
-                margin: EdgeInsets.symmetric(horizontal: 8),
-                child: GridView.extent(
-                    controller: widget.controller,
-                    maxCrossAxisExtent: 120,
-                    childAspectRatio: 200 / 125,
-                    shrinkWrap: true,
-                    children: [
-                      _createGroupCard(Icons.rss_feed, '-1', 'All', null, null),
-                      ...groups.map((e) => _createGroupCard(Icons.rss_feed, e.id, e.name, e.numberOfMembers, () => openSubscriptionGroupDialog(e.id, e.name))),
-                      Card(
-                        child: InkWell(
-                          onTap: () {
-                            openSubscriptionGroupDialog(null, '');
-                          },
-                          child: DottedBorder(
-                            color: Theme.of(context).textTheme.caption!.color!,
-                            child: Container(
-                              width: double.infinity,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    // color: Colors.white10,
-                                    // width: double.infinity,
-                                    child: Icon(Icons.add, size: 16),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text('New', style: TextStyle(
-                                    fontSize: 11,
-                                  ))
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                    ]),
+            if (imageSize != 'disabled')
+              _createImage(imageSize, image, BoxFit.contain),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+              child: _createListTile(
+                context,
+                card['binding_values']['title']['string_value'],
+                card['binding_values']?['description']?['string_value'],
+                card['binding_values']?['vanity_url']?['string_value']
               ),
-            );
-          })
-        ],
-      ),
-    );
-  }
-}
-
-class SubscriptionListFragment extends StatefulWidget {
-  final ScrollController controller;
-  final Function onRefresh;
-
-  const SubscriptionListFragment({Key? key, required this.controller, required this.onRefresh}) : super(key: key);
-
-  @override
-  _SubscriptionListFragmentState createState() => _SubscriptionListFragmentState();
-}
-
-class _SubscriptionListFragmentState extends State<SubscriptionListFragment> {
-  late String _orderSubscriptionsByField;
-  late bool _orderSubscriptionsAscending;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    var prefs = PrefService.of(context);
-
-    setState(() {
-      _orderSubscriptionsAscending = prefs.get(OPTION_SUBSCRIPTION_ORDER_BY_ASCENDING) ?? true;
-      _orderSubscriptionsByField = prefs.get(OPTION_SUBSCRIPTION_ORDER_BY_FIELD) ?? 'name';
-    });
-  }
-
-  void _onChangeOrderSubscriptionsBy(String? value) {
-    var prefs = PrefService.of(context);
-
-    prefs.set(OPTION_SUBSCRIPTION_ORDER_BY_FIELD, value);
-
-    setState(() {
-      this._orderSubscriptionsByField = value ?? 'name';
-    });
-  }
-
-  void _onToggleOrderSubscriptionsAscending() {
-    var prefs = PrefService.of(context);
-    var value = !_orderSubscriptionsAscending;
-
-    prefs.set(OPTION_SUBSCRIPTION_ORDER_BY_ASCENDING, value);
-
-    setState(() {
-      this._orderSubscriptionsAscending = value;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var model = context.read<HomeModel>();
-
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        title: Text('Subscriptions', style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black
-        )),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () => widget.onRefresh(),
             ),
-            PopupMenuButton<String>(
-              icon: Icon(Icons.sort),
-              itemBuilder: (context) => [
-                const PopupMenuItem(child: Text('Name'), value: 'name'),
-                const PopupMenuItem(child: Text('Username'), value: 'screen_name'),
-                const PopupMenuItem(child: Text('Date Subscribed'), value: 'created_at'),
-              ],
-              onSelected: (value) => _onChangeOrderSubscriptionsBy(value),
-            ),
-            IconButton(
-              icon: Icon(Icons.sort_by_alpha),
-              onPressed: () => _onToggleOrderSubscriptionsAscending(),
-            )
           ],
-        ),
-        children: [
-          FutureBuilderWrapper<List<Subscription>>(
-            future: model.listSubscriptions(orderBy: _orderSubscriptionsByField, orderByAscending: _orderSubscriptionsAscending),
-            onError: (error, stackTrace) => FullPageErrorWidget(error: error, stackTrace: stackTrace, prefix: 'Unable to list your subscriptions'),
-            onReady: (data) {
-              if (data.isEmpty) {
-                return Center(child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('¯\\_(ツ)_/¯', style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32
-                      )),
-                      Container(
-                        margin: EdgeInsets.symmetric(vertical: 16),
-                        child: Text('Try searching for some users to follow!', style: TextStyle(
-                            color: Theme.of(context).hintColor
-                        )),
-                      )
-                    ])
-                );
-              }
+        ));
+      case 'player':
+        var image = card['binding_values']['player_image$imageKey']?['image_value'];
 
-              return ListView.builder(
-                controller: widget.controller,
-                shrinkWrap: true,
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  var user = data[index];
-
-                  return UserTile(
-                    id: user.id.toString(),
-                    name: user.name,
-                    screenName: user.screenName,
-                    imageUri: user.profileImageUrlHttps,
-                    verified: user.verified,
-                  );
-                },
-              );
-            },
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class SubscriptionsContent extends StatefulWidget {
-  @override
-  _SubscriptionsContentState createState() => _SubscriptionsContentState();
-}
-
-class _SubscriptionsContentState extends State<SubscriptionsContent> {
-  final _scrollController = ScrollController();
-
-  bool _isLoading = false;
-
-  Future _onRefresh() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await context.read<HomeModel>().refreshSubscriptionUsers();
-    } catch (e, stackTrace) {
-      Catcher.reportCheckedError(e, stackTrace);
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unable to refresh the subscriptions. The error was $e'),
-      ));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+        return _createCard(_findCardUrl(card), Row(
+          children: [
+            Expanded(flex: 1, child: _createImage(imageSize, image, BoxFit.cover, aspectRatio: 1)),
+            Expanded(flex: 4, child: _createListTile(
+              context,
+              card['binding_values']['title']['string_value'],
+              card['binding_values']?['description']?['string_value'],
+              card['binding_values']?['vanity_url']?['string_value']
+            ))
+          ],
+        ));
+      case 'poll2choice_text_only':
+        return _createVoteCard(context, card, 2);
+      case 'poll3choice_text_only':
+        return _createVoteCard(context, card, 3);
+      case 'poll4choice_text_only':
+        return _createVoteCard(context, card, 4);
+      case 'unified_card':
+        try {
+          return _createUnifiedCard(context, card, imageKey, imageSize);
+        } catch (e, stackTrace) {
+          log.severe('Unable to render the unified card', e, stackTrace);
+          return Container();
+        }
+      default:
+        log.warning('Unknown card type ${card['name']} was encountered');
+        return Container();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    return SingleChildScrollView(
-      controller: _scrollController,
-      child: Column(
-        children: [
-          SubscriptionGroupFragment(controller: _scrollController),
-          SubscriptionListFragment(controller: _scrollController, onRefresh: () => _onRefresh()),
-        ],
-      ),
-    );
   }
 }
