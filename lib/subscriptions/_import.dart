@@ -6,8 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:fritter/client.dart';
 import 'package:fritter/database/entities.dart';
 import 'package:fritter/database/repository.dart';
+import 'package:fritter/group/group_model.dart';
 import 'package:fritter/home_model.dart';
+import 'package:fritter/subscriptions/users_model.dart';
 import 'package:fritter/ui/errors.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionImportScreen extends StatefulWidget {
@@ -37,7 +40,10 @@ class _SubscriptionImportScreenState extends State<SubscriptionImportScreen> {
       int? cursor;
       int total = 0;
 
-      var model = HomeModel();
+      // TODO: Test this still works
+      var homeModel = context.read<HomeModel>();
+      var groupModel = context.read<GroupModel>();
+      var usersModel = context.read<UsersModel>();
 
       while (true) {
         var response = await Twitter.getProfileFollows(
@@ -49,7 +55,7 @@ class _SubscriptionImportScreenState extends State<SubscriptionImportScreen> {
         cursor = response.cursorBottom;
         total = total + response.users.length;
 
-        await model.importData({
+        await homeModel.importData({
           TABLE_SUBSCRIPTION: [
             ...response.users.map((e) =>
                 Subscription(
@@ -69,7 +75,9 @@ class _SubscriptionImportScreenState extends State<SubscriptionImportScreen> {
         }
       }
 
-      await model.refreshSubscriptionUsers();
+      await groupModel.reloadGroups();
+      await usersModel.reloadSubscriptions();
+      await usersModel.refreshSubscriptionData();
       _streamController?.close();
     } catch (e, stackTrace) {
       Catcher.reportCheckedError(e, stackTrace);
@@ -88,13 +96,6 @@ class _SubscriptionImportScreenState extends State<SubscriptionImportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text('This functionality is currently in beta!', style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold
-              )),
-            ),
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text('To import subscriptions from an existing Twitter account, enter your username below.'),
@@ -150,10 +151,10 @@ class _SubscriptionImportScreenState extends State<SubscriptionImportScreen> {
                   builder: (context, snapshot) {
                     var error = snapshot.error;
                     if (error != null) {
-                      return EmojiErrorWidget(
-                        emoji: '😢',
-                        message: 'Unable to import',
-                        errorMessage: error.toString()
+                      return FullPageErrorWidget(
+                        error: snapshot.error,
+                        stackTrace: snapshot.stackTrace,
+                        prefix: 'Unable to import'
                       );
                     }
 

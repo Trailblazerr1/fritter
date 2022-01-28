@@ -68,7 +68,7 @@ class TweetCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: EdgeInsets.only(top: 0),
+            margin: EdgeInsets.only(top: 4),
             child: Text(
               title,
               overflow: TextOverflow.ellipsis,
@@ -176,7 +176,7 @@ class TweetCard extends StatelessWidget {
                 'height': image['original_info']['height'],
               }, BoxFit.contain),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 1),
               child: _createListTile(
                   context,
                   unifiedCard['component_objects']['details_1']['data']['title']['content'],

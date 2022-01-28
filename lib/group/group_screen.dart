@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fritter/database/entities.dart';
 import 'package:fritter/database/repository.dart';
 import 'package:fritter/group/_feed.dart';
+import 'package:fritter/group/group_model.dart';
 import 'package:fritter/home_model.dart';
 import 'package:fritter/ui/errors.dart';
 import 'package:fritter/ui/futures.dart';
@@ -27,8 +28,9 @@ class GroupScreen extends StatelessWidget {
 
 class SubscriptionGroupScreenContent extends StatelessWidget {
   final String id;
+  final ScrollController scrollController;
 
-  const SubscriptionGroupScreenContent({Key? key, required this.id}) : super(key: key);
+  const SubscriptionGroupScreenContent({Key? key, required this.id, required this.scrollController}) : super(key: key);
 
   Future<SubscriptionGroupGet> _findSubscriptionGroup(String id) async {
     var database = await Repository.readOnly();
@@ -53,7 +55,7 @@ class SubscriptionGroupScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HomeModel>(builder: (context, model, child) {
+    return Consumer<GroupModel>(builder: (context, model, child) {
       return FutureBuilderWrapper<SubscriptionGroupGet>(
         future: _findSubscriptionGroup(id),
         onError: (error, stackTrace) => ScaffoldErrorWidget(error: error, stackTrace: stackTrace, prefix: 'Unable to load the group'),
@@ -69,6 +71,7 @@ class SubscriptionGroupScreenContent extends StatelessWidget {
                 users: users,
                 includeReplies: settings.includeReplies,
                 includeRetweets: settings.includeRetweets,
+                scrollController: scrollController,
               );
             },
           );
@@ -90,12 +93,21 @@ class _SubscriptionGroupScreen extends StatefulWidget {
 }
 
 class _SubscriptionGroupScreenState extends State<_SubscriptionGroupScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
           title: Text(widget.name),
           actions: [
+            IconButton(icon: Icon(Icons.arrow_upward), onPressed: () async {
+              await _scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.easeInOut);
+            }),
+            IconButton(icon: Icon(Icons.refresh), onPressed: () async {
+              // This is a dirty hack, and probably won't work if the child widgets ever become stateful
+              setState(() {});
+            }),
             IconButton(icon: Icon(Icons.more_vert), onPressed: () {
               showModalBottomSheet(context: context, builder: (context) {
                 var theme = Theme.of(context);
@@ -130,7 +142,7 @@ class _SubscriptionGroupScreenState extends State<_SubscriptionGroupScreen> {
                                 color: Theme.of(context).disabledColor
                             ))
                         ),
-                        Consumer<HomeModel>(builder: (context, model, child) {
+                        Consumer<GroupModel>(builder: (context, model, child) {
                           return FutureBuilderWrapper<SubscriptionGroupSettings>(
                             future: model.loadSubscriptionGroupSettings(widget.id),
                             onError: (error, stackTrace) => InlineErrorWidget(error: error),
@@ -156,6 +168,7 @@ class _SubscriptionGroupScreenState extends State<_SubscriptionGroupScreen> {
       ),
       body: SubscriptionGroupScreenContent(
         id: widget.id,
+        scrollController: _scrollController,
       ),
     );
   }

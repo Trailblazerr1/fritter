@@ -4,13 +4,16 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:catcher/catcher.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fritter/catcher/null_handler.dart';
 import 'package:fritter/catcher/sentry_handler.dart';
 import 'package:fritter/constants.dart';
 import 'package:fritter/database/repository.dart';
+import 'package:fritter/group/group_model.dart';
 import 'package:fritter/group/group_screen.dart';
 import 'package:fritter/home/home_screen.dart';
 import 'package:fritter/home_model.dart';
@@ -19,6 +22,7 @@ import 'package:fritter/profile/profile.dart';
 import 'package:fritter/settings/settings_export_screen.dart';
 import 'package:fritter/status.dart';
 import 'package:fritter/subscriptions/_import.dart';
+import 'package:fritter/subscriptions/users_model.dart';
 import 'package:fritter/ui/errors.dart';
 import 'package:fritter/ui/futures.dart';
 import 'package:http/http.dart' as http;
@@ -85,6 +89,10 @@ Future<void> main() async {
 
   final prefService = await PrefServiceShared.init(prefix: 'pref_', defaults: {
     OPTION_MEDIA_SIZE: 'medium',
+    OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_ASCENDING: false,
+    OPTION_SUBSCRIPTION_GROUPS_ORDER_BY_FIELD: 'name',
+    OPTION_SUBSCRIPTION_ORDER_BY_ASCENDING: false,
+    OPTION_SUBSCRIPTION_ORDER_BY_FIELD: 'name',
     OPTION_THEME_MODE: 'system',
     OPTION_THEME_TRUE_BLACK: false,
     OPTION_TRENDS_LOCATION: jsonEncode({
@@ -126,7 +134,12 @@ Future<void> main() async {
     enableLogger: false,
     runAppFunction: () async {
       Logger.root.onRecord.listen((event) async {
-        log(event.message, error: event.error, stackTrace: event.stackTrace);
+        print(event.message);
+
+        if (event.error != null) {
+          print(event.error);
+          print(event.stackTrace);
+        }
 
         if (event.level.value >= 900) {
           // Don't report internal Catcher errors, as it'll cause a loop
@@ -152,10 +165,28 @@ Future<void> main() async {
         checkForUpdates();
       }
 
+      // Run the migrations early, so models work. We also do this later on so we can display errors to the user
+      await Repository().migrate();
+
+      var homeModel = HomeModel(prefService);
+
+      var groupModel = GroupModel(prefService);
+      await groupModel.reloadGroups();
+
+      var usersModel = UsersModel(prefService, groupModel);
+      await usersModel.reloadSubscriptions();
+
       runApp(PrefService(
-          child: ChangeNotifierProvider(
-            create: (context) => HomeModel(),
-            child: MyApp(hub: sentryHub),
+          child: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (context) => groupModel),
+              ChangeNotifierProvider(create: (context) => homeModel),
+              ChangeNotifierProvider(create: (context) => usersModel),
+            ],
+            child: DevicePreview(
+              enabled: !kReleaseMode,
+              builder: (context) => MyApp(hub: sentryHub),
+            ),
           ),
           service: prefService
       ));
@@ -209,7 +240,7 @@ class _MyAppState extends State<MyApp> {
       name: 'Fritter blue',
       description: 'Blue theme based on the Twitter color scheme',
       light: FlexSchemeColor(
-        primary: Color(0xFF64B5F6),
+        primary: Colors.blue,
         primaryVariant: Color(0xFF320019),
         secondary: Colors.blue[500]!,
         secondaryVariant: Color(0xFF002411),
@@ -240,6 +271,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     return MaterialApp(
+      locale: DevicePreview.locale(context),
       navigatorKey: Catcher.navigatorKey,
       navigatorObservers: [
         SentryNavigatorObserver(hub: widget.hub)
@@ -268,7 +300,7 @@ class _MyAppState extends State<MyApp> {
           );
         };
 
-        return child ?? Container();
+        return DevicePreview.appBuilder(context, child ?? Container());
       },
     );
   }

@@ -46,6 +46,19 @@ class _TweetMediaItemState extends State<TweetMediaItem> {
     }
   }
 
+  String getMediaType(String? type) {
+    switch (type) {
+      case 'animated_gif':
+        return 'GIF';
+      case 'photo':
+        return 'photo';
+      case 'video':
+        return 'video';
+      default:
+        return 'media';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var prefs = PrefService.of(context, listen: false);
@@ -73,7 +86,7 @@ class _TweetMediaItemState extends State<TweetMediaItem> {
         child: Container(
           color: Colors.black26,
           child: Center(
-            child: Text('Tap to show media'),
+            child: Text('Tap to show ${getMediaType(item.type)}'),
           ),
         ),
         onTap: () => setState(() {
@@ -107,8 +120,9 @@ class _TweetMediaItemState extends State<TweetMediaItem> {
 
 class TweetMedia extends StatefulWidget {
   final List<Media> media;
+  final String username;
 
-  const TweetMedia({Key? key, required this.media}) : super(key: key);
+  const TweetMedia({Key? key, required this.media, required this.username}) : super(key: key);
 
   @override
   _TweetMediaState createState() => _TweetMediaState();
@@ -135,7 +149,8 @@ class _TweetMediaState extends State<TweetMedia> {
             var item = widget.media[index];
 
             return GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TweetMediaView(initialIndex: index, media: widget.media))),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => TweetMediaView(initialIndex: index, media: widget.media, username: widget.username ))),
               child: TweetMediaItem(media: item, index: index + 1, total: widget.media.length),
             );
           },
@@ -148,8 +163,9 @@ class _TweetMediaState extends State<TweetMedia> {
 class TweetMediaView extends StatefulWidget {
   final int initialIndex;
   final List<Media> media;
+  final String username;
 
-  const TweetMediaView({Key? key, required this.initialIndex, required this.media}) : super(key: key);
+  const TweetMediaView({Key? key, required this.initialIndex, required this.media, required this.username}) : super(key: key);
 
   @override
   _TweetMediaViewState createState() => _TweetMediaViewState();
@@ -159,12 +175,14 @@ class _TweetMediaViewState extends State<TweetMediaView> {
   static final log = Logger('_TweetMediaViewState');
 
   late Media _media;
+  late String _username;
 
   @override
   void initState() {
     super.initState();
 
     this._media = widget.media[widget.initialIndex];
+    this._username = widget.username;
   }
 
   @override
@@ -181,7 +199,8 @@ class _TweetMediaViewState extends State<TweetMediaView> {
           IconButton(
             icon: Icon(Icons.file_download),
             onPressed: () async {
-              var fileName = path.basename(_media.mediaUrlHttps!);
+              var url = path.basename(_media.mediaUrlHttps!);
+              var fileName = '$_username-$url';
               var uri = '${_media.mediaUrlHttps}:orig';
 
               await downloadUriToPickedFile(uri, fileName,

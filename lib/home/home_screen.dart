@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fritter/constants.dart';
-import 'package:fritter/database/entities.dart';
 import 'package:fritter/home/_feed.dart';
 import 'package:fritter/home/_saved.dart';
 import 'package:fritter/subscriptions/subscriptions.dart';
 import 'package:fritter/home/_search.dart';
 import 'package:fritter/trends/trends.dart';
-import 'package:fritter/settings/settings.dart';
-import 'package:fritter/user.dart';
 import 'package:pref/pref.dart';
-import 'package:reactive_forms/reactive_forms.dart';
 
 class _Tab {
   final String id;
@@ -26,19 +22,17 @@ final List<_Tab> homeTabs = [
   _Tab('saved', 'Saved', Icons.bookmark),
 ];
 
+final int feedTabIndex = homeTabs.indexWhere((element) => element.id == 'feed');
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  final _children = [
-    FeedScreen(),
-    SubscriptionsScreen(),
-    TrendsScreen(),
-    SavedScreen(),
-  ];
+  final ScrollController _scrollController = ScrollController();
 
+  late List<Widget> _children;
   late TabController _tabController;
 
   @override
@@ -52,6 +46,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (prefs.getKeys().contains(OPTION_HOME_INITIAL_TAB)) {
       initialIndex = homeTabs.indexWhere((element) => element.id == prefs.get(OPTION_HOME_INITIAL_TAB));
     }
+
+    _children = [
+      FeedScreen(scrollController: _scrollController),
+      SubscriptionsScreen(),
+      TrendsScreen(),
+      SavedScreen(),
+    ];
 
     _tabController = TabController(vsync: this, initialIndex: initialIndex, length: homeTabs.length);
     _tabController.addListener(() {
@@ -71,6 +72,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         title: Text(homeTabs[_tabController.index].title),
         actions: [
+          if (_tabController.index == feedTabIndex)
+            IconButton(icon: Icon(Icons.arrow_upward), onPressed: () async {
+              await _scrollController.animateTo(0, duration: Duration(seconds: 1), curve: Curves.easeInOut);
+            }),
+          if (_tabController.index == feedTabIndex)
+            IconButton(icon: Icon(Icons.refresh), onPressed: () async {
+              // This is a dirty hack, and probably won't work if the child widgets ever become stateful
+              setState(() {});
+            }),
           IconButton(
             icon: Icon(Icons.search),
             onPressed: () {
@@ -99,60 +109,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         controller: _tabController,
         children: _children,
       ),
-    );
-  }
-}
-
-class SubscriptionCheckboxList extends StatefulWidget {
-  final List<Subscription> subscriptions;
-
-  const SubscriptionCheckboxList({Key? key, required this.subscriptions}) : super(key: key);
-
-  @override
-  _SubscriptionCheckboxListState createState() => _SubscriptionCheckboxListState();
-}
-
-class _SubscriptionCheckboxListState extends State<SubscriptionCheckboxList> {
-  @override
-  Widget build(BuildContext context) {
-    return ReactiveFormConsumer(
-      builder: (context, form, child) {
-        return ReactiveFormArray<bool>(
-          formArrayName: 'subscriptions',
-          builder: (context, formArray, child) {
-            var children = formArray.controls
-                .asMap().entries
-                .map((entry) {
-                  var index = entry.key;
-                  var value = entry.value;
-
-                  var e = widget.subscriptions[index];
-
-                  return CheckboxListTile(
-                    dense: true,
-                    secondary: ClipRRect(
-                      borderRadius: BorderRadius.circular(64),
-                      child: UserAvatar(uri: e.profileImageUrlHttps),
-                    ),
-                    title: Text(e.name),
-                    subtitle: Text('@${e.screenName}'),
-                    value: value.value ?? false,
-                    onChanged: (v) {
-                      if (v != null) {
-                        value.value = v;
-                      }
-                    },
-                  );
-                })
-                .toList(growable: false);
-
-            return ListView(
-                shrinkWrap: true,
-                children: children
-            );
-          },
-        );
-      },
     );
   }
 }

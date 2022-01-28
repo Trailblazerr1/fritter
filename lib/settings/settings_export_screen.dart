@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:file_picker_writable/file_picker_writable.dart';
 import 'package:flutter/material.dart';
+import 'package:fritter/group/group_model.dart';
 import 'package:fritter/home_model.dart';
 import 'package:fritter/settings/settings_data.dart';
+import 'package:fritter/subscriptions/users_model.dart';
 import 'package:fritter/ui/errors.dart';
 import 'package:fritter/ui/futures.dart';
 import 'package:intl/intl.dart';
@@ -67,6 +69,14 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
       _exportTweets = !_exportTweets;
     });
   }
+  
+  bool noExportOptionSelected() {
+    return !(_exportSettings ||
+          _exportSubscriptions ||
+          _exportSubscriptionGroups ||
+          _exportSubscriptionGroupMembers ||
+          _exportTweets);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +84,14 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
       appBar: AppBar(
         title: Text('Export'),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: noExportOptionSelected()
+          ? null
+          : FloatingActionButton(
         child: Icon(Icons.save),
         onPressed: () async {
-          var model = context.read<HomeModel>();
+          var homeModel = context.read<HomeModel>();
+          var groupModel = context.read<GroupModel>();
+          var usersModel = context.read<UsersModel>();
           var prefs = PrefService.of(context);
 
           var settings = _exportSettings
@@ -85,19 +99,19 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
               : null;
 
           var subscriptions = _exportSubscriptions
-              ? await model.listSubscriptions(orderBy: 'id', orderByAscending: true)
+              ? usersModel.subscriptions
               : null;
 
           var subscriptionGroups = _exportSubscriptionGroups
-              ? await model.listSubscriptionGroups(orderBy: 'id', orderByAscending: true)
+              ? groupModel.groups
               : null;
 
           var subscriptionGroupMembers = _exportSubscriptionGroupMembers
-              ? await model.listSubscriptionGroupMembers()
+              ? await groupModel.listGroupMembers()
               : null;
 
           var tweets = _exportTweets
-              ? await model.listSavedTweets()
+              ? await homeModel.listSavedTweets()
               : null;
 
           var data = SettingsData(
@@ -126,13 +140,14 @@ class _SettingsExportScreenState extends State<SettingsExportScreen> {
             var fileName = 'fritter-${dateFormat.format(DateTime.now())}.json';
 
             // This platform can support the directory picker, so display it
-            await FilePickerWritable().openFileForCreate(fileName: fileName, writer: (file) async {
+            var fileInfo = await FilePickerWritable().openFileForCreate(fileName: fileName, writer: (file) async {
               file.writeAsStringSync(exportData);
             });
-
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Data exported to $fileName'),
-            ));
+            if (fileInfo != null) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Data exported to $fileName'),
+              ));
+            }
           }
         },
       ),

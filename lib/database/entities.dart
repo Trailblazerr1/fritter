@@ -1,3 +1,7 @@
+import 'dart:ui';
+
+import 'package:fritter/subscriptions/_groups.dart';
+
 mixin ToMappable {
   Map<String, dynamic> toMap();
 }
@@ -57,23 +61,41 @@ class Subscription with ToMappable {
       'verified': verified ? 1 : 0
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Subscription &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SubscriptionGroup with ToMappable {
   final String id;
   final String name;
   final String icon;
+  final Color? color;
   final int numberOfMembers;
   final DateTime createdAt;
 
-  SubscriptionGroup({required this.id, required this.name, required this.icon, required this.numberOfMembers, required this.createdAt});
+  SubscriptionGroup({required this.id, required this.name, required this.icon, required this.color, required this.numberOfMembers, required this.createdAt});
 
   factory SubscriptionGroup.fromMap(Map<String, Object?> json) {
+    // This is here to handle imports of data from before v2.15.0
+    var icon = json['icon'] as String;
+    if (icon == 'rss_feed' || icon == '') {
+      icon = defaultGroupIcon;
+    }
+
     return SubscriptionGroup(
       id: json['id'] as String,
       name: json['name'] as String,
-      icon: json['icon'] as String,
-      numberOfMembers: 0,
+      icon: icon,
+      color: json['color'] == null ? null : Color(json['color'] as int),
+      numberOfMembers: json['number_of_members'] == null ? 0 : json['number_of_members'] as int,
       createdAt: DateTime.parse(json['created_at'] as String)
     );
   }
@@ -83,6 +105,7 @@ class SubscriptionGroup with ToMappable {
       'id': id,
       'name': name,
       'icon': icon,
+      'color': color?.value,
       'created_at': createdAt.toIso8601String()
     };
   }
@@ -97,11 +120,13 @@ class SubscriptionGroupGet {
 }
 
 class SubscriptionGroupEdit {
-  final String name;
-  final Set<String> members;
-  final List<Subscription> allSubscriptions;
+  final String? id;
+  String name;
+  String? icon;
+  Color? color;
+  Set<String> members;
 
-  SubscriptionGroupEdit({required this.name, required this.members, required this.allSubscriptions});
+  SubscriptionGroupEdit({required this.id, required this.name, required this.icon, required this.color, required this.members});
 }
 
 class SubscriptionGroupMember with ToMappable {

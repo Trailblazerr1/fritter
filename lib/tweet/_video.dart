@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:convert';
 
 import 'package:chewie/chewie.dart';
 import 'package:dart_twitter_api/twitter_api.dart';
@@ -41,6 +41,7 @@ class _TweetVideoState extends State<TweetVideo> {
       autoInitialize: true,
       allowMuting: true,
       customControls: MaterialDesktopControls(),
+      allowedScreenSleep: false,
       additionalOptions: (context) => [
         OptionItem(
           onTap: () async {
